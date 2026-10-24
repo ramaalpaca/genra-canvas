@@ -1,9 +1,10 @@
 import type { CSSProperties } from "react";
 import { Modal, Tag, Timeline } from "antd";
 import type { TFunction } from "i18next";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { useVersionCheck } from "@/hooks/use-version-check";
 import { APP_VERSION } from "@/constant/env";
+import { FORK_REPO_URL, UPSTREAM_AUTHOR, UPSTREAM_REPO_URL } from "@/services/genra/env";
 
 function getTagColor(type: string) {
     if (type === "新增" || type === "Added") return "green";
@@ -87,6 +88,17 @@ export function VersionReleaseModal({ className, style }: VersionReleaseModalPro
                                 </div>
                             ),
                         }))}
+                    />
+                </div>
+                {/* Attribution: this product is a fork of infinite-canvas (MIT); keep the author credit and page branding as requested upstream. */}
+                <div className="mt-4 border-t border-stone-200 pt-3 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
+                    <Trans
+                        i18nKey="genra.basedOn"
+                        values={{ author: UPSTREAM_AUTHOR }}
+                        components={{
+                            upstream: <a href={UPSTREAM_REPO_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" />,
+                            fork: <a href={FORK_REPO_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" />,
+                        }}
                     />
                 </div>
             </Modal>

@@ -16,7 +16,9 @@ import { syncAppDataToWebdav, type AppSyncDomainKey, type AppSyncProgressEvent }
 import { testWebdavConnection, WEBDAV_MANIFEST_FILE_NAME } from "@/services/webdav-sync";
 import { audioFormatOptions, audioVoiceOptions, normalizeAudioSpeedValue } from "@/lib/audio-generation";
 import { computeMediaSize, inferMediaRatio, inferMediaScale, mediaScaleOptions, parseVideoResolution } from "@/lib/media-size";
-import { createModelChannel, modelOptionsFromChannels, normalizeModelOptionValue, selectableModelsByCapability, useConfigStore, type AiConfig, type ApiCallFormat, type ConfigTabKey, type ModelCapability, type ModelChannel } from "@/stores/use-config-store";
+import { createModelChannel, DEFAULT_CONFIG_TAB, HIDDEN_CONFIG_TABS, modelOptionsFromChannels, normalizeModelOptionValue, selectableModelsByCapability, useConfigStore, type AiConfig, type ApiCallFormat, type ConfigTabKey, type ModelCapability, type ModelChannel } from "@/stores/use-config-store";
+import { refreshGenraModels } from "@/services/genra/channel";
+import { GENRA_CHANNEL_LOCKED } from "@/services/genra/env";
 
 type ModelGroup = {
     capability: ModelCapability;
@@ -49,12 +51,13 @@ function createWebdavDomainProgress(): Record<AppSyncDomainKey, WebdavDomainProg
     );
 }
 
-export function AppConfigPanel({ showDoneButton = false, initialTab = "channels" }: { showDoneButton?: boolean; initialTab?: ConfigTabKey }) {
+export function AppConfigPanel({ showDoneButton = false, initialTab = DEFAULT_CONFIG_TAB }: { showDoneButton?: boolean; initialTab?: ConfigTabKey }) {
     const { message } = App.useApp();
     const { i18n, t } = useTranslation();
     const configInputRef = useRef<HTMLInputElement>(null);
     const [activeTab, setActiveTab] = useState<ConfigTabKey>(initialTab);
     const [editingChannelId, setEditingChannelId] = useState("");
+    const [refreshingModels, setRefreshingModels] = useState(false);
     const [testingWebdav, setTestingWebdav] = useState(false);
     const [syncingWebdav, setSyncingWebdav] = useState(false);
     const [webdavSyncStatus, setWebdavSyncStatus] = useState("");
@@ -96,6 +99,18 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = "channels"
     };
 
     const updateChannels = (channels: ModelChannel[]) => saveConfig(withChannels(config, channels));
+
+    const refreshModels = async () => {
+        setRefreshingModels(true);
+        try {
+            const models = await refreshGenraModels();
+            message.success(t("genra.modelsRefreshed", { count: models.length }));
+        } catch (error) {
+            message.error(error instanceof Error ? error.message : t("genra.modelsRefreshFailed"));
+        } finally {
+            setRefreshingModels(false);
+        }
+    };
 
     const addChannel = () => {
         const channel = createModelChannel({ name: t("config.channels.numberedName", { count: config.channels.length + 1 }) });
@@ -167,22 +182,32 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = "channels"
 
     return (
         <>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3 dark:border-stone-800">
-                <div className="text-xs text-stone-500">{t("config.fileSecurity")}</div>
-                <div className="flex gap-2">
-                    <Button icon={<Upload className="size-4" />} onClick={() => configInputRef.current?.click()}>
-                        {t("config.import")}
+            {GENRA_CHANNEL_LOCKED ? (
+                // Genra: the config file would carry the session JWT, so import/export stays hidden; models come from the Genra channel.
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3 dark:border-stone-800">
+                    <div className="text-xs text-stone-500">{t("genra.configDescription")}</div>
+                    <Button icon={<RefreshCw className="size-4" />} loading={refreshingModels} onClick={() => void refreshModels()}>
+                        {t("genra.refreshModels")}
                     </Button>
-                    <Button icon={<Download className="size-4" />} onClick={exportAppConfig}>
-                        {t("config.export")}
-                    </Button>
-                    <input ref={configInputRef} type="file" accept="application/json,.json" className="hidden" onChange={(event) => event.target.files?.[0] && void loadConfigFile(event.target.files[0])} />
                 </div>
-            </div>
+            ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 pb-3 dark:border-stone-800">
+                    <div className="text-xs text-stone-500">{t("config.fileSecurity")}</div>
+                    <div className="flex gap-2">
+                        <Button icon={<Upload className="size-4" />} onClick={() => configInputRef.current?.click()}>
+                            {t("config.import")}
+                        </Button>
+                        <Button icon={<Download className="size-4" />} onClick={exportAppConfig}>
+                            {t("config.export")}
+                        </Button>
+                        <input ref={configInputRef} type="file" accept="application/json,.json" className="hidden" onChange={(event) => event.target.files?.[0] && void loadConfigFile(event.target.files[0])} />
+                    </div>
+                </div>
+            )}
             <Tabs
-                activeKey={activeTab}
+                activeKey={HIDDEN_CONFIG_TABS.includes(activeTab) ? DEFAULT_CONFIG_TAB : activeTab}
                 onChange={(key) => setActiveTab(key as ConfigTabKey)}
-                items={[
+                items={([
                     {
                         key: "channels",
                         label: t("config.tabs.channels"),
@@ -350,7 +375,7 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = "channels"
                         label: t("config.tabs.localStorage"),
                         children: <ConfigLocalStorage active={activeTab === "local-storage"} />,
                     },
-                ]}
+                ] satisfies Array<{ key: ConfigTabKey; label: string; children: React.ReactNode }>).filter((item) => !HIDDEN_CONFIG_TABS.includes(item.key))}
             />
             {showDoneButton ? (
                 <div className="mt-4 flex justify-end">
@@ -374,7 +399,7 @@ export function AppConfigModal() {
             title={
                 <div>
                     <div className="text-lg font-semibold">{t("config.title")}</div>
-                    <div className="mt-1 text-xs font-normal text-stone-500">{t("config.modalDescription")}</div>
+                    <div className="mt-1 text-xs font-normal text-stone-500">{t(GENRA_CHANNEL_LOCKED ? "genra.configSubtitle" : "config.modalDescription")}</div>
                 </div>
             }
             open={isConfigOpen}

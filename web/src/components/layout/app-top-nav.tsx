@@ -1,5 +1,5 @@
-import { Bot, Menu } from "lucide-react";
-import { Button, Tooltip } from "antd";
+import { Bot, Coins, ExternalLink, LogOut, Menu } from "lucide-react";
+import { Button, Dropdown, Tooltip } from "antd";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,9 @@ import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
+import { signOutGenra, useGenraAuth } from "@/services/genra/auth";
+import { GENRA_FRONTEND_URL, GENRA_LOCAL_AGENT_ENABLED } from "@/services/genra/env";
+import { GENRA_PRICING_URL, usePointsBalance } from "@/services/genra/points";
 import { useAgentStore } from "@/stores/use-agent-store";
 
 export function AppTopNav() {
@@ -27,7 +30,7 @@ export function AppTopNav() {
     const activeToolSlug = navigationTools.some((tool) => tool.slug === slug) ? (slug as NavigationToolSlug) : undefined;
 
     useEffect(() => {
-        if (autoConnectRef.current || agentEnabled || agentConnected || !agentToken.trim()) return;
+        if (!GENRA_LOCAL_AGENT_ENABLED || autoConnectRef.current || agentEnabled || agentConnected || !agentToken.trim()) return;
         autoConnectRef.current = true;
         connectAgent({ silent: true });
     }, [agentConnected, agentEnabled, agentToken, connectAgent]);
@@ -42,8 +45,8 @@ export function AppTopNav() {
                                 <span
                                     className="size-5 shrink-0 bg-current"
                                     style={{
-                                        mask: "url(/logo.svg) center / contain no-repeat",
-                                        WebkitMask: "url(/logo.svg) center / contain no-repeat",
+                                        mask: "url(/genra-logo.png) center / contain no-repeat",
+                                        WebkitMask: "url(/genra-logo.png) center / contain no-repeat",
                                     }}
                                 />
                                 <span className="text-base font-medium">{t("meta.title")}</span>
@@ -83,10 +86,14 @@ export function AppTopNav() {
                         </div>
 
                         <div className="my-auto flex h-9 min-w-0 items-center justify-end gap-2 justify-self-end whitespace-nowrap">
-                            <Tooltip title={t(panelOpen ? "topNav.closeAgent" : "topNav.openAgent")}>
-                                <Button type="text" shape="circle" className="!h-8 !w-8 !min-w-8" icon={<Bot className="size-4" />} onClick={togglePanel} aria-label={t(panelOpen ? "topNav.closeAgent" : "topNav.openAgent")} />
-                            </Tooltip>
+                            <GenraPointsBadge />
+                            {GENRA_LOCAL_AGENT_ENABLED ? (
+                                <Tooltip title={t(panelOpen ? "topNav.closeAgent" : "topNav.openAgent")}>
+                                    <Button type="text" shape="circle" className="!h-8 !w-8 !min-w-8" icon={<Bot className="size-4" />} onClick={togglePanel} aria-label={t(panelOpen ? "topNav.closeAgent" : "topNav.openAgent")} />
+                                </Tooltip>
+                            ) : null}
                             <UserStatusActions />
+                            <GenraAccountMenu />
                         </div>
                     </div>
                 </header>
@@ -95,5 +102,60 @@ export function AppTopNav() {
             <MobileNavDrawer open={mobileNavOpen} activeToolSlug={activeToolSlug} onClose={() => setMobileNavOpen(false)} />
             <AppConfigModal />
         </>
+    );
+}
+
+/** Points balance from Genra; clicking opens the pricing page (top-up). */
+function GenraPointsBadge() {
+    const { t } = useTranslation();
+    const user = useGenraAuth((state) => state.user);
+    const { data, isPending, isError } = usePointsBalance();
+    if (!user) return null;
+    const label = isError ? t("genra.pointsUnavailable") : isPending ? t("genra.pointsLoading") : t("genra.points", { count: Math.floor(data?.points_balance ?? 0) });
+    return (
+        <Tooltip title={t("genra.topUp")}>
+            <a
+                href={GENRA_PRICING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-stone-200 px-3 text-xs font-medium text-stone-700 transition hover:border-stone-400 hover:text-stone-950 dark:border-stone-700 dark:text-stone-200 dark:hover:border-stone-500 dark:hover:text-white"
+            >
+                <Coins className="size-3.5" />
+                <span className="hidden lg:inline">{label}</span>
+            </a>
+        </Tooltip>
+    );
+}
+
+function GenraAccountMenu() {
+    const { t } = useTranslation();
+    const session = useGenraAuth((state) => state.session);
+    const user = useGenraAuth((state) => state.user);
+    const email = user?.email || "";
+    const avatarUrl = typeof user?.user_metadata?.avatar_url === "string" ? user.user_metadata.avatar_url : "";
+    if (session === undefined) return <span className="text-xs text-stone-500">{t("genra.signingIn")}</span>;
+    if (!user) return null;
+    return (
+        <Dropdown
+            trigger={["click"]}
+            placement="bottomRight"
+            menu={{
+                items: [
+                    { key: "email", label: <span className="text-xs text-stone-500">{email}</span>, disabled: true },
+                    { type: "divider" },
+                    { key: "genra", icon: <ExternalLink className="size-3.5" />, label: t("genra.openGenra"), onClick: () => window.open(GENRA_FRONTEND_URL, "_blank", "noopener") },
+                    { key: "signout", icon: <LogOut className="size-3.5" />, label: t("genra.signOut"), onClick: () => void signOutGenra() },
+                ],
+            }}
+        >
+            <button
+                type="button"
+                className="inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-stone-200 text-xs font-semibold text-stone-800 transition hover:ring-2 hover:ring-stone-300 dark:bg-stone-700 dark:text-stone-100 dark:hover:ring-stone-600"
+                aria-label={t("genra.account")}
+                title={email}
+            >
+                {avatarUrl ? <img src={avatarUrl} alt="" className="size-full object-cover" /> : (email || "?").slice(0, 1).toUpperCase()}
+            </button>
+        </Dropdown>
     );
 }
