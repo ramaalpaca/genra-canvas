@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { signOutGenra, useGenraAuth } from "@/services/genra/auth";
 import { GENRA_FRONTEND_URL, GENRA_LOCAL_AGENT_ENABLED } from "@/services/genra/env";
-import { GENRA_PRICING_URL, usePointsBalance } from "@/services/genra/points";
+import { GENRA_PRICING_URL, useCreditsBalance } from "@/services/genra/credits";
 import { useAgentStore } from "@/stores/use-agent-store";
 
 export function AppTopNav() {
@@ -86,7 +86,7 @@ export function AppTopNav() {
                         </div>
 
                         <div className="my-auto flex h-9 min-w-0 items-center justify-end gap-2 justify-self-end whitespace-nowrap">
-                            <GenraPointsBadge />
+                            <GenraCreditsBadge />
                             {GENRA_LOCAL_AGENT_ENABLED ? (
                                 <Tooltip title={t(panelOpen ? "topNav.closeAgent" : "topNav.openAgent")}>
                                     <Button type="text" shape="circle" className="!h-8 !w-8 !min-w-8" icon={<Bot className="size-4" />} onClick={togglePanel} aria-label={t(panelOpen ? "topNav.closeAgent" : "topNav.openAgent")} />
@@ -105,13 +105,13 @@ export function AppTopNav() {
     );
 }
 
-/** Points balance from Genra; clicking opens the pricing page (top-up). */
-function GenraPointsBadge() {
+/** User credits balance (same wallet as the editor); clicking opens the pricing page (top-up). */
+function GenraCreditsBadge() {
     const { t } = useTranslation();
     const user = useGenraAuth((state) => state.user);
-    const { data, isPending, isError } = usePointsBalance();
+    const { data, isPending, isError } = useCreditsBalance();
     if (!user) return null;
-    const label = isError ? t("genra.pointsUnavailable") : isPending ? t("genra.pointsLoading") : t("genra.points", { count: Math.floor(data?.points_balance ?? 0) });
+    const label = isError ? t("genra.creditsUnavailable") : isPending ? t("genra.creditsLoading") : t("genra.credits", { count: Math.floor(data?.total_credits ?? 0) });
     return (
         <Tooltip title={t("genra.topUp")}>
             <a

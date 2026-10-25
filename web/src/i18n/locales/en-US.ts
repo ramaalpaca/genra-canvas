@@ -664,9 +664,9 @@ export default {
         enUS: "English",
     },
     genra: {
-        points: "{{count}} points",
-        pointsLoading: "Points…",
-        pointsUnavailable: "Points unavailable",
+        credits: "{{count}} credits",
+        creditsLoading: "Credits…",
+        creditsUnavailable: "Credits unavailable",
         topUp: "Top up",
         openGenra: "Open Genra",
         signOut: "Sign out",
@@ -676,7 +676,7 @@ export default {
         modelsRefreshed: "Loaded {{count}} models from Genra",
         modelsRefreshFailed: "Failed to load models from Genra",
         configSubtitle: "Default models, prompt sources, and local storage",
-        configDescription: "Generation runs through your Genra account and uses points; the model list comes from Genra.",
+        configDescription: "Generation runs through your Genra account and uses your credits; the model list comes from Genra.",
         basedOn: "Based on <upstream>infinite-canvas</upstream> by {{author}} (MIT License). Source of this fork: <fork>genra-canvas</fork>.",
     },
 };

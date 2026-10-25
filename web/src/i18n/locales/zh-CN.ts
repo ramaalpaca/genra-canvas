@@ -664,9 +664,9 @@ export default {
         enUS: "English",
     },
     genra: {
-        points: "{{count}} 积分",
-        pointsLoading: "积分…",
-        pointsUnavailable: "积分不可用",
+        credits: "{{count}} 积分",
+        creditsLoading: "积分…",
+        creditsUnavailable: "积分不可用",
         topUp: "充值",
         openGenra: "打开 Genra",
         signOut: "退出登录",

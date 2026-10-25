@@ -17,8 +17,8 @@ Genra Canvas is a fork of **[infinite-canvas](https://github.com/basketikun/infi
 | Area | Change |
 |---|---|
 | Sign-in | `web/src/services/genra/auth.ts`: supabase-js session shared with genra.ai through a `.genra.ai` cookie (same storage adapter as the Genra editor). Unauthenticated visitors are sent to the Genra login page. |
-| Provider | `web/src/services/genra/channel.ts`: after sign-in a locked **Genra** channel is injected — `baseUrl = VITE_GENRA_API_URL + /openai`, `apiKey = the user's JWT`, models from `GET /openai/v1/models` grouped by `genra.capability`. The apiKey follows every token refresh. |
-| Points | `web/src/services/genra/points.ts` + top bar badge reading `/api/v1/generate/points-balance`; click goes to Genra pricing. |
+| Provider | `web/src/services/genra/channel.ts`: after sign-in a locked **Genra** channel is injected — `baseUrl = VITE_GENRA_API_URL + /openai`, `apiKey = the user's JWT`, models from `GET /openai/v1/models` (alias ids such as `nano-banana-pro` / `veo`, with `genra.credits_pricing`) grouped by `genra.capability`. The apiKey follows every token refresh. |
+| Credits | `web/src/services/genra/credits.ts` + top bar badge reading `/api/v1/user/subscription/status` (`total_credits`, same wallet as the editor); click goes to Genra pricing. |
 | Hidden UI | Provider / local proxy / WebDAV settings tabs, config import/export, the local Canvas Agent (Codex / Claude Code) panel and buttons. All behind switches in `web/src/services/genra/env.ts` (`VITE_GENRA_CHANNEL_LOCKED`, `VITE_GENRA_LOCAL_AGENT`). |
 | Removed | `canvas-agent/`, `canvas-proxy/`, `plugins/infinite-canvas` (Codex app plugin), upstream GitHub workflows (Docker image, docs pages, plugin publishing). |
 | Branding | Title / icon / antd theme colours; default locale `en-US` (zh-CN still available). |
