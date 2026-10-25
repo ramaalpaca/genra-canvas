@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
 
 import i18n from "@/i18n";
+import { GENRA_CHANNEL_ID, GENRA_CHANNEL_LOCKED, GENRA_CHANNEL_NAME, GENRA_OPENAI_BASE_URL } from "@/services/genra/env";
 
 export type ApiCallFormat = "openai" | "gemini";
 export type ModelCapability = "image" | "video" | "text" | "audio";
@@ -66,6 +67,9 @@ export type WebdavSyncConfig = {
     lastSyncedAt: string;
 };
 export type ConfigTabKey = "channels" | "local-proxy" | "preferences" | "prompt-sources" | "webdav" | "local-storage";
+/** Genra v1: providers / own keys, local proxy and WebDAV are hidden while the Genra channel is locked. */
+export const HIDDEN_CONFIG_TABS: ConfigTabKey[] = GENRA_CHANNEL_LOCKED ? ["channels", "local-proxy", "webdav"] : [];
+export const DEFAULT_CONFIG_TAB: ConfigTabKey = GENRA_CHANNEL_LOCKED ? "preferences" : "channels";
 
 export type ChannelCredentialsImportResult = {
     status: "created" | "updated" | "missing-base-url" | "invalid-base-url";
@@ -79,7 +83,7 @@ const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 export const LOCAL_PROXY_PACKAGE = "@basketikun/canvas-proxy";
 export const DEFAULT_LOCAL_PROXY_URL = "http://127.0.0.1:23210";
 
-export const defaultConfig: AiConfig = {
+const upstreamDefaultConfig: AiConfig = {
     channelMode: "local",
     baseUrl: OPENAI_BASE_URL,
     apiKey: "",
@@ -126,6 +130,11 @@ export const defaultConfig: AiConfig = {
     nodeRegenerateBehavior: "new-node",
     autoFocusOnSelect: false,
 };
+
+/** Placeholder Genra channel until the session bootstrap (services/genra/channel.ts) fills in the JWT and model list. */
+export const genraPlaceholderChannel: ModelChannel = { id: GENRA_CHANNEL_ID, name: GENRA_CHANNEL_NAME, baseUrl: GENRA_OPENAI_BASE_URL, apiKey: "", apiFormat: "openai", models: [] };
+
+export const defaultConfig: AiConfig = GENRA_CHANNEL_LOCKED ? { ...upstreamDefaultConfig, channels: [genraPlaceholderChannel], baseUrl: GENRA_OPENAI_BASE_URL, models: [], model: "", imageModel: "", videoModel: "", textModel: "", audioModel: "" } : upstreamDefaultConfig;
 
 export const defaultWebdavSyncConfig: WebdavSyncConfig = {
     url: "",
@@ -218,7 +227,7 @@ export const useConfigStore = create<ConfigStore>()(
             config: defaultConfig,
             webdav: defaultWebdavSyncConfig,
             isConfigOpen: false,
-            configTab: "channels",
+            configTab: DEFAULT_CONFIG_TAB,
             shouldPromptContinue: false,
             updateConfig: (key, value) =>
                 set((state) => ({
@@ -241,7 +250,7 @@ export const useConfigStore = create<ConfigStore>()(
                     },
                 })),
             isAiConfigReady: (config, model) => isAiConfigReady(config, model),
-            openConfigDialog: (shouldPromptContinue = false, configTab = "channels") => set({ isConfigOpen: true, shouldPromptContinue, configTab }),
+            openConfigDialog: (shouldPromptContinue = false, configTab = DEFAULT_CONFIG_TAB) => set({ isConfigOpen: true, shouldPromptContinue, configTab: HIDDEN_CONFIG_TABS.includes(configTab) ? DEFAULT_CONFIG_TAB : configTab }),
             setConfigDialogOpen: (isConfigOpen) => set({ isConfigOpen }),
             clearPromptContinue: () => set({ shouldPromptContinue: false }),
         }),
@@ -254,7 +263,7 @@ export const useConfigStore = create<ConfigStore>()(
                 const persistedWebdav = (persistedState.webdav || {}) as Partial<WebdavSyncConfig>;
                 const config = { ...defaultConfig, ...persistedConfig };
                 if (!Array.isArray(persistedConfig.channels)) config.channels = [];
-                const channels = normalizeChannels(config);
+                const channels = lockGenraChannels(normalizeChannels(config));
                 const models = modelOptionsFromChannels(channels);
                 return {
                     ...current,
@@ -328,6 +337,8 @@ export function upsertChannelCredentials(
     input: { baseUrl?: string | null; apiKey?: string | null },
 ): ChannelCredentialsImportResult & { config: AiConfig } {
     const rawBaseUrl = input.baseUrl?.trim() || "";
+    // Locked Genra channel: ?baseUrl=&apiKey= imports must not add other providers.
+    if (GENRA_CHANNEL_LOCKED) return { status: "invalid-base-url", config };
     if (!rawBaseUrl) return { status: "missing-base-url", config };
     if (!isHttpBaseUrl(rawBaseUrl)) return { status: "invalid-base-url", config };
 
@@ -469,6 +480,12 @@ function normalizeChannels(config: AiConfig) {
         );
     }
     return channels;
+}
+
+/** With the Genra channel locked, persisted configs keep only that channel (others may predate the lock or come from an imported file). */
+function lockGenraChannels(channels: ModelChannel[]) {
+    if (!GENRA_CHANNEL_LOCKED) return channels;
+    return [channels.find((channel) => channel.id === GENRA_CHANNEL_ID) || genraPlaceholderChannel];
 }
 
 export function defaultBaseUrlForApiFormat(apiFormat: ApiCallFormat) {

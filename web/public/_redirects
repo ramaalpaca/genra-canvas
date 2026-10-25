@@ -1,0 +1,2 @@
+# SPA fallback for react-router deep links (Cloudflare Pages). /assets/* misses are turned into 404 by functions/assets/[[path]].js.
+/* /index.html 200

@@ -1,7 +1,7 @@
 export default {
     meta: {
-        title: "Infinite Canvas",
-        description: "An infinite canvas creation tool",
+        title: "Genra Canvas",
+        description: "Genra's infinite canvas for AI image, video and text creation",
     },
     theme: { toggle: "Toggle theme" },
     common: {
@@ -662,5 +662,21 @@ export default {
     locale: {
         zhCN: "简体中文",
         enUS: "English",
+    },
+    genra: {
+        credits: "{{count}} credits",
+        creditsLoading: "Credits…",
+        creditsUnavailable: "Credits unavailable",
+        topUp: "Top up",
+        openGenra: "Open Genra",
+        signOut: "Sign out",
+        signingIn: "Signing in…",
+        account: "Account",
+        refreshModels: "Refresh models",
+        modelsRefreshed: "Loaded {{count}} models from Genra",
+        modelsRefreshFailed: "Failed to load models from Genra",
+        configSubtitle: "Default models, prompt sources, and local storage",
+        configDescription: "Generation runs through your Genra account and uses your credits; the model list comes from Genra.",
+        basedOn: "Based on <upstream>infinite-canvas</upstream> by {{author}} (MIT License). Source of this fork: <fork>genra-canvas</fork>.",
     },
 };

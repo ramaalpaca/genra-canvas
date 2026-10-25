@@ -1,0 +1,11 @@
+# CF Pages 响应头（按请求路径匹配）——照 video_mvp editor_web/public/_headers
+
+# hash 命名的构建产物：边缘长缓存（CDN-Cache-Control，CF 吃这个头定边缘 TTL），
+# 浏览器每次重验证（304 走边缘，h2 并行 ~1RTT）。
+# 为什么浏览器侧不敢 immutable：部署窗口期 SPA 兜底 HTML 落在 .js URL 名下时，
+# immutable 会把毒在用户浏览器里钉死一年（2026-07-20 NRT 边缘事故），must-revalidate
+# 让浏览器侧的毒在边缘 purge 后下一次加载自愈。边缘侧的毒由 deploy workflow 的
+# 「源站就绪验证 → prefix purge → 复验」兜底。
+/assets/*
+  Cache-Control: public, max-age=0, must-revalidate
+  CDN-Cache-Control: public, max-age=31536000, immutable

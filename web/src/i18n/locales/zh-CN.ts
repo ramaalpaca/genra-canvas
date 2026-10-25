@@ -1,7 +1,7 @@
 export default {
     meta: {
-        title: "无限画布",
-        description: "一个无限画布创作工具",
+        title: "Genra 画布",
+        description: "Genra 的 AI 图片、视频与文本无限画布创作工具",
     },
     theme: { toggle: "切换主题" },
     common: {
@@ -662,5 +662,21 @@ export default {
     locale: {
         zhCN: "简体中文",
         enUS: "English",
+    },
+    genra: {
+        credits: "{{count}} 积分",
+        creditsLoading: "积分…",
+        creditsUnavailable: "积分不可用",
+        topUp: "充值",
+        openGenra: "打开 Genra",
+        signOut: "退出登录",
+        signingIn: "登录中…",
+        account: "账号",
+        refreshModels: "刷新模型列表",
+        modelsRefreshed: "已从 Genra 加载 {{count}} 个模型",
+        modelsRefreshFailed: "从 Genra 加载模型失败",
+        configSubtitle: "默认模型、提示词来源与本地存储",
+        configDescription: "生成走你的 Genra 账号并消耗积分；模型列表来自 Genra。",
+        basedOn: "基于 {{author}} 的 <upstream>infinite-canvas</upstream>（MIT 协议）二次开发，本分支源码：<fork>genra-canvas</fork>。",
     },
 };
