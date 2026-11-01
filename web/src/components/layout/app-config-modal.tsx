@@ -18,7 +18,7 @@ import { audioFormatOptions, audioVoiceOptions, normalizeAudioSpeedValue } from 
 import { computeMediaSize, inferMediaRatio, inferMediaScale, mediaScaleOptions, parseVideoResolution } from "@/lib/media-size";
 import { createModelChannel, DEFAULT_CONFIG_TAB, HIDDEN_CONFIG_TABS, modelOptionsFromChannels, normalizeModelOptionValue, selectableModelsByCapability, useConfigStore, type AiConfig, type ApiCallFormat, type ConfigTabKey, type ModelCapability, type ModelChannel } from "@/stores/use-config-store";
 import { refreshGenraModels } from "@/services/genra/channel";
-import { GENRA_CHANNEL_LOCKED } from "@/services/genra/env";
+import { GENRA_CHANNEL_LOCKED, GENRA_PRODUCTION_UI } from "@/services/genra/env";
 
 type ModelGroup = {
     capability: ModelCapability;
@@ -372,7 +372,7 @@ export function AppConfigPanel({ showDoneButton = false, initialTab = DEFAULT_CO
                     },
                     {
                         key: "local-storage",
-                        label: t("config.tabs.localStorage"),
+                        label: t(GENRA_PRODUCTION_UI ? "config.tabs.cache" : "config.tabs.localStorage"),
                         children: <ConfigLocalStorage active={activeTab === "local-storage"} />,
                     },
                 ] satisfies Array<{ key: ConfigTabKey; label: string; children: React.ReactNode }>).filter((item) => !HIDDEN_CONFIG_TABS.includes(item.key))}

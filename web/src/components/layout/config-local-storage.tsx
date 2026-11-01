@@ -4,6 +4,7 @@ import { Database, HardDrive, Layers3, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 import { readLocalStorageUsage, type LocalStorageUsage } from "@/services/local-storage-usage";
 
 const storeLabelKeys: Record<string, string> = {
@@ -44,6 +45,7 @@ export function ConfigLocalStorage({ active }: { active: boolean }) {
 
     return (
         <div className="space-y-3">
+            {GENRA_PRODUCTION_UI ? <Alert type="info" showIcon title={t("genra.localDataCacheNotice")} /> : null}
             <section className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -84,16 +86,16 @@ export function ConfigLocalStorage({ active }: { active: boolean }) {
                     <div className="flex items-center justify-between gap-3 border-b border-stone-200 px-4 py-3 dark:border-stone-800">
                         <div className="min-w-0">
                             <div className="truncate text-sm font-semibold">{t("config.localStorage.mainDatabase")}</div>
-                            <div className="mt-0.5 truncate font-mono text-[11px] text-stone-500">{database.name} · v{database.version}</div>
+                            {GENRA_PRODUCTION_UI ? null : <div className="mt-0.5 truncate font-mono text-[11px] text-stone-500">{database.name} · v{database.version}</div>}
                         </div>
                         <div className="shrink-0 text-sm font-medium tabular-nums">{formatStorageBytes(database.bytes)}</div>
                     </div>
                     <div className="divide-y divide-stone-200 dark:divide-stone-800">
-                        {database.stores.map((store) => (
+                        {database.stores.filter((store) => !GENRA_PRODUCTION_UI || store.name in storeLabelKeys).map((store) => (
                             <div key={store.name} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 px-4 py-3 text-sm">
                                 <div className="min-w-0">
                                     <div className="truncate font-medium">{storeLabel(store.name, t)}</div>
-                                    <div className="mt-0.5 truncate font-mono text-[11px] text-stone-500">{store.name}</div>
+                                    {GENRA_PRODUCTION_UI ? null : <div className="mt-0.5 truncate font-mono text-[11px] text-stone-500">{store.name}</div>}
                                 </div>
                                 <div className="text-right text-xs text-stone-500 tabular-nums">{t("config.localStorage.records", { count: store.records })}</div>
                                 <div className="w-20 text-right font-medium tabular-nums">{formatStorageBytes(store.bytes)}</div>

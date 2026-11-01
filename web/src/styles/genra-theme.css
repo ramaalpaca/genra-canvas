@@ -1,0 +1,80 @@
+/*
+ * Genra palette for the shadcn variables and Tailwind's stone scale, active when main.tsx sets
+ * <html data-genra-ui> (VITE_GENRA_PRODUCTION_UI). Values come from video_mvp editor_web/src/styles/linear-tokens.css.
+ *
+ * Upstream components use `stone-*` classes directly. Tailwind v4 resolves them through --color-stone-*,
+ * so re-pointing that scale at the editor's cool 220° neutrals recolours them without touching component code.
+ * Hex equivalents for antd and the canvas live in services/genra/theme.ts; keep the two in sync.
+ */
+:root[data-genra-ui] {
+    --radius: 0.5rem;
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+    --color-stone-50: hsl(220 13% 98%);
+    --color-stone-100: hsl(220 13% 96%);
+    --color-stone-200: hsl(220 13% 91%);
+    --color-stone-300: hsl(220 13% 86%);
+    --color-stone-400: hsl(220 9% 60%);
+    --color-stone-500: hsl(220 9% 46%);
+    --color-stone-600: hsl(220 9% 36%);
+    --color-stone-700: hsl(220 13% 23%);
+    --color-stone-800: hsl(220 13% 18%);
+    --color-stone-900: hsl(220 13% 13%);
+    --color-stone-950: hsl(220 13% 9%);
+
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(220 13% 9%);
+    --card: hsl(220 13% 98%);
+    --card-foreground: hsl(220 13% 9%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(220 13% 9%);
+    --primary: hsl(18 85% 52%);
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(220 13% 96%);
+    --secondary-foreground: hsl(220 13% 9%);
+    --muted: hsl(220 13% 96%);
+    --muted-foreground: hsl(220 9% 46%);
+    --accent: hsl(220 13% 94%);
+    --accent-foreground: hsl(220 13% 9%);
+    --destructive: hsl(0 72% 51%);
+    --border: hsl(220 13% 91%);
+    --input: hsl(220 13% 86%);
+    --ring: hsl(18 85% 52%);
+    --sidebar: hsl(220 13% 98%);
+    --sidebar-foreground: hsl(220 13% 9%);
+    --sidebar-primary: hsl(18 85% 52%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(220 13% 94%);
+    --sidebar-accent-foreground: hsl(220 13% 9%);
+    --sidebar-border: hsl(220 13% 91%);
+    --sidebar-ring: hsl(18 85% 52%);
+}
+
+:root[data-genra-ui].dark {
+    --background: hsl(220 13% 9%);
+    --foreground: hsl(220 13% 98%);
+    --card: hsl(220 13% 11%);
+    --card-foreground: hsl(220 13% 98%);
+    --popover: hsl(220 13% 13%);
+    --popover-foreground: hsl(220 13% 98%);
+    --primary: hsl(18 85% 55%);
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(220 13% 13%);
+    --secondary-foreground: hsl(220 13% 98%);
+    --muted: hsl(220 13% 13%);
+    --muted-foreground: hsl(220 9% 70%);
+    --accent: hsl(220 13% 15%);
+    --accent-foreground: hsl(220 13% 98%);
+    --destructive: hsl(0 72% 61%);
+    --border: hsl(220 13% 18%);
+    --input: hsl(220 13% 23%);
+    --ring: hsl(18 85% 55%);
+    --sidebar: hsl(220 13% 11%);
+    --sidebar-foreground: hsl(220 13% 98%);
+    --sidebar-primary: hsl(18 85% 55%);
+    --sidebar-primary-foreground: hsl(0 0% 100%);
+    --sidebar-accent: hsl(220 13% 15%);
+    --sidebar-accent-foreground: hsl(220 13% 98%);
+    --sidebar-border: hsl(220 13% 18%);
+    --sidebar-ring: hsl(18 85% 55%);
+}

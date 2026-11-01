@@ -44,7 +44,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
     return (
         <ConfigProvider locale={locale === "zh-CN" ? zhCN : enUS} theme={getAntThemeConfig(dark)}>
-            <ProConfigProvider dark={dark}>
+            {/* No `dark` here: it would stack a second darkAlgorithm on the theme above and undo the pinned brand colours. */}
+            <ProConfigProvider>
                 <App>
                     <QueryClientProvider client={queryClient}>
                         <ClientRootInit>{children}</ClientRootInit>

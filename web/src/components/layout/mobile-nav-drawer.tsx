@@ -2,8 +2,10 @@ import { Drawer } from "antd";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+import { GenraAccountDrawerSection } from "@/components/layout/genra-account";
 import { visibleNavigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
 import { cn } from "@/lib/utils";
+import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 
 type MobileNavDrawerProps = {
     open: boolean;
@@ -36,6 +38,7 @@ export function MobileNavDrawer({ open, activeToolSlug, onClose }: MobileNavDraw
                     );
                 })}
             </div>
+            {GENRA_PRODUCTION_UI ? <GenraAccountDrawerSection onAction={onClose} /> : null}
         </Drawer>
     );
 }
