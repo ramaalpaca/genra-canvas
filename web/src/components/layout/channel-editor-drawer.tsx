@@ -1,11 +1,15 @@
 import { Button, Drawer, Input, Segmented, Select, Space } from "antd";
 import { ListPlus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { defaultBaseUrlForApiFormat, guessCapability, normalizeChannelModels, type ApiCallFormat, type ChannelModel, type ModelCapability, type ModelChannel } from "@/stores/use-config-store";
-import { ModelScriptEditor } from "./model-script-editor";
 import { ModelSelectModal } from "./model-select-modal";
+import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
+
+// Genra: the model-call script editor runs user JavaScript (new Function). It is dropped from production builds
+// (dead branch under the build-time constant) and only lazy-loaded when the upstream provider UI is enabled.
+const ModelScriptEditor = GENRA_PRODUCTION_UI ? null : lazy(() => import("./model-script-editor").then((module) => ({ default: module.ModelScriptEditor })));
 
 type ScriptTarget = { name: string; capability: ModelCapability; value: string };
 
@@ -116,14 +120,18 @@ export function ChannelEditorDrawer({ open, channel, onSave, onClose }: { open: 
 
             <ModelSelectModal open={selectOpen} channel={draft} selectedNames={draft.models.map((model) => model.name)} onConfirm={applySelection} onClose={() => setSelectOpen(false)} />
 
-            <ModelScriptEditor
-                open={Boolean(scriptTarget)}
-                capability={scriptTarget?.capability || "text"}
-                modelName={scriptTarget?.name || ""}
-                value={scriptTarget?.value || ""}
-                onSave={(script) => scriptTarget && setScript(scriptTarget.name, script)}
-                onClose={() => setScriptTarget(null)}
-            />
+            {ModelScriptEditor ? (
+                <Suspense fallback={null}>
+                    <ModelScriptEditor
+                        open={Boolean(scriptTarget)}
+                        capability={scriptTarget?.capability || "text"}
+                        modelName={scriptTarget?.name || ""}
+                        value={scriptTarget?.value || ""}
+                        onSave={(script) => scriptTarget && setScript(scriptTarget.name, script)}
+                        onClose={() => setScriptTarget(null)}
+                    />
+                </Suspense>
+            ) : null}
         </Drawer>
     );
 }

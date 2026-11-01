@@ -2,6 +2,8 @@
 
 declare const __APP_VERSION__: string;
 declare const __APP_RELEASES__: import("@/lib/release").ReleaseInfo[];
+// Genra: boolean literal injected by vite.config.ts from VITE_GENRA_PRODUCTION_UI (default true) so dead branches tree-shake.
+declare const __GENRA_PRODUCTION_UI__: boolean;
 
 interface ImportMetaEnv {
     // Comma-separated local development plugin URLs, refetched on every startup without caching or persistence.
@@ -22,4 +24,6 @@ interface ImportMetaEnv {
     readonly VITE_GENRA_CHANNEL_LOCKED?: string;
     // "true" shows the local Canvas Agent UI again
     readonly VITE_GENRA_LOCAL_AGENT?: string;
+    // "false" restores the upstream UI entry points (GitHub / docs / version / plugins / language switch / home page)
+    readonly VITE_GENRA_PRODUCTION_UI?: string;
 }

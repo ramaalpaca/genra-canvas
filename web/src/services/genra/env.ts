@@ -33,3 +33,14 @@ export const FORK_REPO_URL = "https://github.com/ramaalpaca/genra-canvas";
 
 /** Local Canvas Agent (Codex / Claude Code over MCP) UI: hidden for Genra; VITE_GENRA_LOCAL_AGENT=true re-enables it. */
 export const GENRA_LOCAL_AGENT_ENABLED = import.meta.env.VITE_GENRA_LOCAL_AGENT === "true";
+
+/**
+ * Production UI (default on): hide the upstream self-hosting entry points that Genra users never need —
+ * GitHub / docs links, the version modal, node plugins (URL install), the language switch, the marketing home page,
+ * the settings nav item (moved into the account menu) and "delete all" on the canvas list.
+ * The underlying modules stay in the tree so upstream merges don't conflict; the build-time constant
+ * (see vite.config.ts `define`) also lets Rollup drop `model-script-editor` and the plugin manager from production bundles.
+ * VITE_GENRA_PRODUCTION_UI=false restores the upstream UI for local debugging.
+ * (`typeof` guard: bun test has no Vite `define`; in builds the expression folds to a literal.)
+ */
+export const GENRA_PRODUCTION_UI: boolean = typeof __GENRA_PRODUCTION_UI__ === "boolean" ? __GENRA_PRODUCTION_UI__ : true;

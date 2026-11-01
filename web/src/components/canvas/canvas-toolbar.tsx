@@ -9,6 +9,7 @@ import { getNodeSpec } from "@/constant/canvas";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import { useTranslation } from "react-i18next";
+import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 
 export function CanvasToolbar({
     selectedCount,
@@ -71,7 +72,8 @@ export function CanvasToolbar({
     const [extPanelX, setExtPanelX] = useState(0);
     // Keep extension plugin nodes synchronized with registry changes.
     useNodeRegistryVersion();
-    const extensionDefs = listNodeDefinitions().filter((def) => def.showInCreateMenu !== false && getNodePluginId(def.type) !== "builtin");
+    // Genra production UI: no plugin ("extensions") entry on the dock.
+    const extensionDefs = GENRA_PRODUCTION_UI ? [] : listNodeDefinitions().filter((def) => def.showInCreateMenu !== false && getNodePluginId(def.type) !== "builtin");
     const dockStyle = { background: theme.toolbar.panel, borderColor: theme.toolbar.border, color: theme.toolbar.item, boxShadow: colorTheme === "dark" ? "0 18px 45px rgba(0,0,0,.32)" : "0 16px 40px rgba(28,25,23,.12)" };
     const hoverStyle = { background: theme.toolbar.itemHover, color: theme.toolbar.activeText };
     const activeStyle = { background: theme.toolbar.activeBg, color: theme.toolbar.activeText };
