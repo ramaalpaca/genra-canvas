@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { navigationTools, visibleNavigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
 import { AppConfigModal } from "@/components/layout/app-config-modal";
 import { GenraAboutModal, GenraAccountMenu, GenraCreditsBadge } from "@/components/layout/genra-account";
+import { GenraCloudSyncNotifier } from "@/components/layout/genra-cloud-sync";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { cn } from "@/lib/utils";
@@ -101,6 +102,7 @@ export function AppTopNav() {
             <MobileNavDrawer open={mobileNavOpen} activeToolSlug={activeToolSlug} onClose={() => setMobileNavOpen(false)} />
             <AppConfigModal />
             <GenraAboutModal />
+            <GenraCloudSyncNotifier />
         </>
     );
 }

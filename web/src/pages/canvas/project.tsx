@@ -72,6 +72,7 @@ import {
 import { getNodeDefinition, isBuiltinNodeType as isBuiltinType, useNodeRegistryVersion } from "@/lib/canvas/node-registry";
 import { registerBuiltinNodes } from "@/components/canvas/nodes/builtin-nodes";
 import { importCanvasPackage } from "@/lib/canvas/canvas-import";
+import { useCloudProjectReloadToken } from "@/services/genra/cloud-sync";
 import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 
 // Genra: the plugin manager installs remote JS from arbitrary URLs. Dropped from production builds (dead branch under the
@@ -223,6 +224,7 @@ function InfiniteCanvasPage() {
     const addAsset = useAssetStore((state) => state.addAsset);
     const cleanupAssetImages = useAssetStore((state) => state.cleanupImages);
     const hydrated = useCanvasStore((state) => state.hydrated);
+    const cloudReloadToken = useCloudProjectReloadToken(projectId);
     const createProject = useCanvasStore((state) => state.createProject);
     const openProject = useCanvasStore((state) => state.openProject);
     const updateProject = useCanvasStore((state) => state.updateProject);
@@ -479,7 +481,7 @@ function InfiniteCanvasPage() {
             setProjectLoaded(true);
         };
         void restore();
-    }, [hydrated, navigate, openProject, projectId]);
+    }, [hydrated, navigate, openProject, projectId, cloudReloadToken]);
 
     useEffect(() => {
         if (!projectLoaded) return;

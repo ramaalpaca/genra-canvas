@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { CanvasDeleteProjectsDialog } from "@/components/canvas/canvas-delete-projects-dialog";
 import { CanvasProjectCard } from "@/components/canvas/canvas-project-card";
 import { GenraLocalDataNotice } from "@/components/canvas/genra-local-data-notice";
+import { GenraCloudSyncBadge } from "@/components/layout/genra-cloud-sync";
 import { importCanvasPackage } from "@/lib/canvas/canvas-import";
 import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 import { useCanvasStore } from "@/stores/canvas/use-canvas-store";
@@ -66,6 +67,7 @@ export default function CanvasPage() {
                         <h1 className="mt-3 text-3xl font-semibold">{t("canvas.title")}</h1>
                     </div>
                     <div className="flex items-center gap-2">
+                        <GenraCloudSyncBadge />
                         {selectedIds.length ? (
                             <>
                                 {/* Genra production: zip export lives in the canvas menu ("more"); "delete all" is gone. */}

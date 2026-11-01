@@ -7,6 +7,7 @@ export type UploadedFile = { url: string; storageKey: string; bytes: number; mim
 
 const store = localforage.createInstance({ name: "infinite-canvas", storeName: "media_files" });
 const objectUrls = new Map<string, string>();
+let remoteMediaResolver: ((storageKey: string) => Promise<Blob | null>) | null = null;
 
 export async function uploadMediaFile(input: string | Blob, prefix = "file"): Promise<UploadedFile> {
     const blob = typeof input === "string" ? await (await fetch(withLocalProxy(input))).blob() : input;
@@ -22,15 +23,23 @@ export async function resolveMediaUrl(storageKey?: string, fallback = "") {
     if (!storageKey) return fallback;
     const cached = objectUrls.get(storageKey);
     if (cached) return cached;
-    const blob = await store.getItem<Blob>(storageKey);
+    const blob = await getMediaBlob(storageKey);
     if (!blob) return fallback;
+    const stored = objectUrls.get(storageKey);
+    if (stored) return stored;
     const url = URL.createObjectURL(blob);
     objectUrls.set(storageKey, url);
     return url;
 }
 
-export async function getMediaBlob(storageKey: string) {
-    return store.getItem<Blob>(storageKey);
+/** Fallback for blobs missing locally, e.g. a canvas that came from another device. It should save what it finds with setMediaBlob. */
+export function setRemoteMediaResolver(resolver: typeof remoteMediaResolver) {
+    remoteMediaResolver = resolver;
+}
+
+export async function getMediaBlob(storageKey: string, options?: { localOnly?: boolean }) {
+    const blob = await store.getItem<Blob>(storageKey);
+    return blob || (options?.localOnly ? null : ((await remoteMediaResolver?.(storageKey)) ?? null));
 }
 
 export async function setMediaBlob(storageKey: string, blob: Blob) {
