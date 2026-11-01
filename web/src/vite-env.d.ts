@@ -24,6 +24,8 @@ interface ImportMetaEnv {
     readonly VITE_GENRA_CHANNEL_LOCKED?: string;
     // "true" shows the local Canvas Agent UI again
     readonly VITE_GENRA_LOCAL_AGENT?: string;
+    // "false" skips the allowlist check and treats every signed-in user as enabled
+    readonly VITE_GENRA_ACCESS_GATE?: string;
     // "false" keeps canvases in this browser only (no cloud sync)
     readonly VITE_GENRA_CLOUD_SYNC?: string;
     // "false" restores the upstream UI entry points (GitHub / docs / version / plugins / language switch / home page)

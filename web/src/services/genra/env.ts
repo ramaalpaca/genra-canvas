@@ -34,6 +34,9 @@ export const FORK_REPO_URL = "https://github.com/ramaalpaca/genra-canvas";
 /** Local Canvas Agent (Codex / Claude Code over MCP) UI: hidden for Genra; VITE_GENRA_LOCAL_AGENT=true re-enables it. */
 export const GENRA_LOCAL_AGENT_ENABLED = import.meta.env.VITE_GENRA_LOCAL_AGENT === "true";
 
+/** Canvas allowlist gate (default on); VITE_GENRA_ACCESS_GATE=false treats every signed-in user as enabled. */
+export const GENRA_ACCESS_GATE_ENABLED = import.meta.env.VITE_GENRA_ACCESS_GATE !== "false";
+
 /** Canvas cloud sync (default on); VITE_GENRA_CLOUD_SYNC=false keeps canvases in this browser only. */
 export const GENRA_CLOUD_SYNC_ENABLED = import.meta.env.VITE_GENRA_CLOUD_SYNC !== "false";
 

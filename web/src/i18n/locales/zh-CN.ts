@@ -679,6 +679,16 @@ export default {
         modelsRefreshFailed: "从 Genra 加载模型失败",
         configSubtitle: "默认模型、提示词来源与缓存",
         configDescription: "生成走你的 Genra 账号并消耗积分；模型列表来自 Genra。",
+        access: {
+            betaTitle: "Genra Canvas 内测中",
+            betaDescription: "目前只对受邀账号开放。想提前使用，可以申请开通。",
+            backToGenra: "回到 genra.ai",
+            requestAccess: "申请开通",
+            requestSubject: "申请开通 Genra Canvas：{{email}}",
+            unreachableTitle: "暂时无法连接",
+            unreachableDescription: "请检查网络后重试。",
+            retry: "重试",
+        },
         cloudSync: {
             phase: { syncing: "同步中", synced: "已同步", offline: "离线", error: "同步失败" },
             lastSynced: "上次同步：{{time}}",
