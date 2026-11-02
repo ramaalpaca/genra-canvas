@@ -90,8 +90,8 @@ describe("estimateCost", () => {
 describe("labels", () => {
     test("Chinese", async () => {
         await i18n.changeLanguage("zh-CN");
-        expect(unitPriceLabel("nano-banana-pro")).toBe("1 credits / 张");
-        expect(unitPriceLabel("veo")).toBe("8 credits / 秒");
+        expect(unitPriceLabel("nano-banana-pro")).toBe("1 积分 / 张");
+        expect(unitPriceLabel("veo")).toBe("8 积分 / 秒");
     });
 
     test("English handles the singular", async () => {
