@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
+import type { CreditsPricing } from "@/services/genra/pricing";
 
 import i18n from "@/i18n";
 import { GENRA_CHANNEL_ID, GENRA_CHANNEL_LOCKED, GENRA_CHANNEL_NAME, GENRA_OPENAI_BASE_URL } from "@/services/genra/env";
@@ -14,6 +15,8 @@ export type ChannelModel = {
     name: string;
     capability: ModelCapability;
     script?: string;
+    /** Genra channel only: credit price from /v1/models. */
+    pricing?: CreditsPricing;
 };
 
 export type ModelChannel = {
@@ -315,7 +318,8 @@ export function normalizeChannelModels(models: Array<string | ChannelModel> | un
         seen.add(name);
         const capability = typeof item === "string" ? guessCapability(name) : item.capability || guessCapability(name);
         const script = typeof item === "string" ? undefined : item.script?.trim() || undefined;
-        result.push({ name, capability, script });
+        const pricing = typeof item === "string" ? undefined : item.pricing;
+        result.push({ name, capability, script, ...(pricing ? { pricing } : {}) });
     }
     return result;
 }
