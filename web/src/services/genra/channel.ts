@@ -6,11 +6,11 @@ import { encodeChannelModel, modelOptionsFromChannels, normalizeModelOptionValue
 
 import { getGenraAccessToken, watchGenraSession } from "./auth";
 import { GENRA_CHANNEL_ID, GENRA_CHANNEL_LOCKED, GENRA_CHANNEL_NAME, GENRA_OPENAI_BASE_URL } from "./env";
-import { normalizePricing, setModelPricing } from "./pricing";
+import { normalizePricing, setModelCatalog } from "./pricing";
 
 type GenraModelItem = {
     id?: string;
-    genra?: { capability?: string; display_name?: string | null; model_ids?: string[]; credits_pricing?: Record<string, unknown> };
+    genra?: { capability?: string; display_name?: string | null; speed_score?: number | null; model_ids?: string[]; credits_pricing?: Record<string, unknown> };
 };
 
 const CAPABILITIES: ModelCapability[] = ["image", "video", "text", "audio"];
@@ -27,7 +27,9 @@ export async function fetchGenraModels(accessToken: string): Promise<ChannelMode
     return (response.data.data || []).flatMap((item) => {
         const capability = item.genra?.capability as ModelCapability | undefined;
         const pricing = normalizePricing(item.genra?.credits_pricing);
-        return item.id && capability && CAPABILITIES.includes(capability) ? [{ name: item.id, capability, ...(pricing ? { pricing } : {}) }] : [];
+        const speedScore = item.genra?.speed_score;
+        const displayName = item.genra?.display_name;
+        return item.id && capability && CAPABILITIES.includes(capability) ? [{ name: item.id, capability, ...(pricing ? { pricing } : {}), ...(typeof speedScore === "number" ? { speedScore } : {}), ...(displayName ? { displayName } : {}) }] : [];
     });
 }
 
@@ -74,9 +76,9 @@ let modelsRequested = false;
  * and keep the channel's apiKey in sync whenever supabase-js refreshes the token.
  */
 export function startGenraSession() {
-    const syncPricing = () => setModelPricing(currentGenraChannel()?.models ?? []);
-    syncPricing();
-    useConfigStore.subscribe(syncPricing);
+    const syncCatalog = () => setModelCatalog(currentGenraChannel()?.models ?? []);
+    syncCatalog();
+    useConfigStore.subscribe(syncCatalog);
     return watchGenraSession((session) => {
         const existing = currentGenraChannel();
         if (existing?.apiKey !== session.access_token) writeGenraChannel(createGenraChannel(session.access_token, existing?.models || []));

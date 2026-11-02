@@ -8,7 +8,7 @@ process.env.VITE_SUPABASE_ANON_KEY = "test";
 Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: () => null, setItem: () => undefined, removeItem: () => undefined } });
 
 const { applyGenraChannel, createGenraChannel } = await import("../src/services/genra/channel");
-const { defaultConfig, modelMatchesCapability } = await import("../src/stores/use-config-store");
+const { defaultConfig, modelMatchesCapability, normalizeChannelModels } = await import("../src/stores/use-config-store");
 
 const image = (name: string): ChannelModel => ({ name, capability: "image" });
 const video = (name: string): ChannelModel => ({ name, capability: "video" });
@@ -54,4 +54,10 @@ describe("Genra default models", () => {
         expect(modelMatchesCapability(config, "veo", "video")).toBe(false);
         expect(modelMatchesCapability(config, "genra::seedance-v2-mini", "video")).toBe(true);
     });
+});
+
+test("speed score and display name survive config normalization, including a score of 0", () => {
+    const [model] = normalizeChannelModels([{ name: "minimax-h3", capability: "video", speedScore: 0, displayName: "MiniMax H3" }]);
+    expect(model).toMatchObject({ speedScore: 0, displayName: "MiniMax H3" });
+    expect(normalizeChannelModels([{ name: "veo", capability: "video" }])[0]).not.toHaveProperty("speedScore");
 });

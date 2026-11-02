@@ -14,7 +14,11 @@ export type CreditsPricing = {
 export type CostEstimateInput = { count?: number; seconds?: number; resolution?: string };
 
 const NUMERIC_FIELDS = ["base", "per_unit", "per_second", "per_char"] as const;
+/** At or below this `speed_score` a model counts as slow; generation usually takes minutes. */
+export const SLOW_SPEED_SCORE = 0.3;
+
 const byAlias = new Map<string, CreditsPricing>();
+const slowAliases = new Set<string>();
 
 /** Keeps the fields we understand. An unpriced model (`{}` or all zeros) has no pricing, so it shows no label. */
 export function normalizePricing(value: unknown): CreditsPricing | undefined {
@@ -31,11 +35,17 @@ export function normalizePricing(value: unknown): CreditsPricing | undefined {
     return pricing;
 }
 
-export function setModelPricing(models: { name: string; pricing?: CreditsPricing }[]) {
+export function setModelCatalog(models: { name: string; pricing?: CreditsPricing; speedScore?: number }[]) {
     byAlias.clear();
+    slowAliases.clear();
     for (const model of models) {
         if (model.pricing) byAlias.set(model.name, model.pricing);
+        if (model.speedScore !== undefined && model.speedScore <= SLOW_SPEED_SCORE) slowAliases.add(model.name);
     }
+}
+
+export function isSlowModel(alias: string | undefined) {
+    return alias !== undefined && slowAliases.has(alias);
 }
 
 export function getModelPricing(alias: string | undefined) {

@@ -17,6 +17,10 @@ export type ChannelModel = {
     script?: string;
     /** Genra channel only: credit price from /v1/models. */
     pricing?: CreditsPricing;
+    /** Genra channel only: 0–1, lower is slower. */
+    speedScore?: number;
+    /** Genra channel only: human-readable name from /v1/models. */
+    displayName?: string;
 };
 
 export type ModelChannel = {
@@ -318,8 +322,8 @@ export function normalizeChannelModels(models: Array<string | ChannelModel> | un
         seen.add(name);
         const capability = typeof item === "string" ? guessCapability(name) : item.capability || guessCapability(name);
         const script = typeof item === "string" ? undefined : item.script?.trim() || undefined;
-        const pricing = typeof item === "string" ? undefined : item.pricing;
-        result.push({ name, capability, script, ...(pricing ? { pricing } : {}) });
+        const genraFields = typeof item === "string" ? {} : { ...(item.pricing ? { pricing: item.pricing } : {}), ...(item.speedScore === undefined ? {} : { speedScore: item.speedScore }), ...(item.displayName ? { displayName: item.displayName } : {}) };
+        result.push({ name, capability, script, ...genraFields });
     }
     return result;
 }
