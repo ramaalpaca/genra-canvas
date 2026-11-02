@@ -1,5 +1,5 @@
 // Auto-injected, locked "Genra" provider channel: baseUrl = Genra OpenAI-compatible facade, apiKey = the user's Supabase JWT.
-// Model ids from /v1/models are aliases (nano-banana-pro, veo, genra-text…) merged by the facade; `genra.capability` groups them.
+// Model ids from /v1/models are aliases (nano-banana-2.1, seedance-v2-mini, genra-text…) merged by the facade; `genra.capability` groups them.
 import axios from "axios";
 
 import { encodeChannelModel, modelOptionsFromChannels, normalizeModelOptionValue, selectableModelsByCapability, useConfigStore, type AiConfig, type ChannelModel, type ModelCapability, type ModelChannel } from "@/stores/use-config-store";
@@ -14,8 +14,8 @@ type GenraModelItem = {
 };
 
 const CAPABILITIES: ModelCapability[] = ["image", "video", "text", "audio"];
-// First match wins when the user has no valid selection for that capability yet.
-const PREFERRED_DEFAULTS: Partial<Record<ModelCapability, string[]>> = { image: ["nano-banana-pro"], video: ["veo"], text: ["genra-text"] };
+// First match wins when the user has no valid selection for that capability: a new user, or a saved model the backend dropped.
+const PREFERRED_DEFAULTS: Partial<Record<ModelCapability, string[]>> = { image: ["nano-banana-2.1", "nano-banana-pro"], video: ["seedance-v2-mini", "veo"], text: ["genra-text"] };
 
 export function createGenraChannel(apiKey = "", models: ChannelModel[] = []): ModelChannel {
     return { id: GENRA_CHANNEL_ID, name: GENRA_CHANNEL_NAME, baseUrl: GENRA_OPENAI_BASE_URL, apiKey, apiFormat: "openai", models };
