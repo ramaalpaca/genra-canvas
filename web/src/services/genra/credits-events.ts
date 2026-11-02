@@ -4,7 +4,9 @@ import { create } from "zustand";
 
 import i18n from "@/i18n";
 
+import { hasErrorCode } from "./access-client";
 import { GENRA_API_URL } from "./env";
+import { PAID_PLAN_REQUIRED } from "./free-tier";
 import { readCreditsCharge } from "./pricing";
 
 const CHARGE_BATCH_MS = 1_500;
@@ -14,9 +16,10 @@ type CreditsEvents = {
     /** One toast per batch: a 3-image run is three requests but one thing the user did. */
     charge: { cost: number; balance?: number; sequence: number } | null;
     insufficientSequence: number;
+    upgradeSequence: number;
 };
 
-export const useCreditsEvents = create<CreditsEvents>()(() => ({ charge: null, insufficientSequence: 0 }));
+export const useCreditsEvents = create<CreditsEvents>()(() => ({ charge: null, insufficientSequence: 0, upgradeSequence: 0 }));
 
 let pending: { cost: number; balance?: number } | null = null;
 let batchTimer: ReturnType<typeof setTimeout> | undefined;
@@ -48,6 +51,13 @@ function noticeInsufficient() {
     useCreditsEvents.setState((state) => ({ insufficientSequence: state.insufficientSequence + 1 }));
 }
 
+/** Asks a free user to upgrade: a locked option was clicked, or the server refused a request. */
+export function promptUpgrade() {
+    useCreditsEvents.setState((state) => ({ upgradeSequence: state.upgradeSequence + 1 }));
+}
+
+const paidPlanBody = () => ({ error: { message: i18n.t("genra.pricing.paidPlanError"), type: "paid_plan_required", code: PAID_PLAN_REQUIRED, param: null } });
+
 const insufficientBody = () => ({ error: { message: i18n.t("genra.pricing.insufficientError"), type: "insufficient_credits", code: "insufficient_credits", param: null } });
 
 /** Generation errors surface the server's message as-is, so swap the text here for every caller at once. */
@@ -55,9 +65,15 @@ function watchFetch() {
     const original = window.fetch.bind(window);
     window.fetch = async (...args) => {
         const response = await original(...args);
-        if (response.status !== 402 || !response.url.startsWith(GENRA_API_URL)) return response;
-        noticeInsufficient();
-        return new Response(JSON.stringify(insufficientBody()), { status: 402, headers: { "Content-Type": "application/json" } });
+        if (!response.url.startsWith(GENRA_API_URL)) return response;
+        const headers = { "Content-Type": "application/json" };
+        if (response.status === 402) {
+            noticeInsufficient();
+            return new Response(JSON.stringify(insufficientBody()), { status: 402, headers });
+        }
+        if (response.status !== 403 || !hasErrorCode(await response.clone().text(), PAID_PLAN_REQUIRED)) return response;
+        promptUpgrade();
+        return new Response(JSON.stringify(paidPlanBody()), { status: 403, headers });
     };
 }
 
@@ -68,10 +84,15 @@ export function startCreditsTracking() {
             if (response.config.url?.startsWith(GENRA_API_URL)) recordCharge(response.data);
             return response;
         },
-        (error: unknown) => {
-            if (axios.isAxiosError(error) && error.response?.status === 402 && error.config?.url?.startsWith(GENRA_API_URL)) {
-                error.response.data = insufficientBody();
+        async (error: unknown) => {
+            if (!axios.isAxiosError(error) || !error.response || !error.config?.url?.startsWith(GENRA_API_URL)) throw error;
+            const { response } = error;
+            if (response.status === 402) {
+                response.data = insufficientBody();
                 noticeInsufficient();
+            } else if (response.status === 403 && hasErrorCode(response.data instanceof Blob ? await response.data.text() : response.data, PAID_PLAN_REQUIRED)) {
+                response.data = paidPlanBody();
+                promptUpgrade();
             }
             throw error;
         },

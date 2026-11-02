@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { parsePixelSize, clampVideoSeconds, parseVideoResolution } from "@/lib/media-size";
 import { cn } from "@/lib/utils";
 import { useCreditsBalance } from "@/services/genra/credits";
+import { isFreeUser } from "@/services/genra/free-tier";
 import { estimateCost, formatCredits, isSlowModel } from "@/services/genra/pricing";
 import { modelOptionName, type AiConfig } from "@/stores/use-config-store";
 
@@ -16,7 +17,7 @@ type GenraCostEstimateProps = {
     mode: string;
     /** Overrides `config.count` where the screen clamps it itself. */
     count?: number;
-    /** One line instead of two, for the fixed-height config node, where a second line pushes the button out. */
+    /** One line instead of two, for the fixed-height config node, where more lines push the button out. Drops the free plan note. */
     inline?: boolean;
     className?: string;
     style?: CSSProperties;
@@ -35,8 +36,10 @@ export function GenraCostEstimate({ config, model = config.model, mode, count, i
     const { t } = useTranslation();
     const { data } = useCreditsBalance();
     const estimate = estimateForConfig(config, model, mode, count);
-    const slow = (mode === "image" || mode === "video") && isSlowModel(modelOptionName(model));
-    if (estimate === undefined && !slow) return null;
+    const generates = mode === "image" || mode === "video";
+    const slow = generates && isSlowModel(modelOptionName(model));
+    const freeHint = generates && !inline && isFreeUser();
+    if (estimate === undefined && !slow && !freeHint) return null;
     const low = estimate !== undefined && data !== undefined && data.total_credits < estimate;
     return (
         <div className={cn("flex text-xs", inline ? "flex-row-reverse items-center gap-2" : "flex-col items-end", className)} style={style}>
@@ -47,6 +50,7 @@ export function GenraCostEstimate({ config, model = config.model, mode, count, i
                 </span>
             )}
             {slow ? <span className="whitespace-nowrap text-[11px] opacity-80">{t("genra.pricing.slowHint")}</span> : null}
+            {freeHint ? <span className="whitespace-nowrap text-[11px] opacity-80">{t("genra.pricing.freeTierHint")}</span> : null}
         </div>
     );
 }

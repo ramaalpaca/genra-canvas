@@ -1,11 +1,13 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import { Cpu } from "lucide-react";
+import { Cpu, Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "antd";
 
 import i18n from "@/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { promptUpgrade } from "@/services/genra/credits-events";
+import { isModelLocked } from "@/services/genra/free-tier";
 import { isSlowModel, unitPriceLabel } from "@/services/genra/pricing";
 import { modelOptionLabel, modelOptionName, selectableModelsByCapability, type AiConfig, type ModelCapability } from "@/stores/use-config-store";
 
@@ -49,7 +51,11 @@ export function ModelPicker({ config, value, onChange, capability, className, fu
                 if (nextOpen) window.dispatchEvent(new CustomEvent("model-picker-open", { detail: pickerId }));
                 setOpen(nextOpen);
             }}
-            onValueChange={onChange}
+            onValueChange={(model) => {
+                // Locked models stay in the list, so choosing one explains the plan instead of switching to it.
+                if (isModelLocked(modelOptionName(model))) promptUpgrade();
+                else onChange(model);
+            }}
         >
             <SelectTrigger
                 className={cn(
@@ -66,6 +72,7 @@ export function ModelPicker({ config, value, onChange, capability, className, fu
                 <span className="canvas-model-picker-text min-w-0 flex-1 truncate text-left">{triggerLabel}</span>
                 <SlowModelTag model={current} className="canvas-model-picker-text" />
                 {hideTriggerPrice ? null : <ModelPrice model={current} className="canvas-model-picker-text" />}
+                {isModelLocked(modelOptionName(current)) ? <Lock className="size-3 shrink-0 opacity-60" /> : null}
             </SelectTrigger>
             <SelectContent
                 data-canvas-no-zoom
@@ -100,12 +107,21 @@ function emptyModelLabel(config: AiConfig, capability?: ModelCapability) {
 }
 
 function ModelLabel({ config, model }: { config: AiConfig; model: string }) {
+    const { t } = useTranslation();
+    const locked = isModelLocked(modelOptionName(model));
     return (
-        <span className="flex w-full min-w-0 items-center gap-2">
+        <span className={cn("flex w-full min-w-0 items-center gap-2", locked && "opacity-50")}>
             <ModelIcon model={model} />
             <span className="min-w-0 flex-1 truncate">{modelOptionLabel(config, model)}</span>
             <SlowModelTag model={model} />
-            <ModelPrice model={model} />
+            {locked ? (
+                <span className="flex shrink-0 items-center gap-1 text-xs">
+                    <Lock className="size-3" />
+                    {t("genra.pricing.paidUnlock")}
+                </span>
+            ) : (
+                <ModelPrice model={model} />
+            )}
         </span>
     );
 }

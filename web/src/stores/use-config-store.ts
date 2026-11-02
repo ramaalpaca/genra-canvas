@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { nanoid } from "nanoid";
+import type { FreeTierRule, UserTier } from "@/services/genra/free-tier";
 import type { CreditsPricing } from "@/services/genra/pricing";
 
 import i18n from "@/i18n";
@@ -21,6 +22,8 @@ export type ChannelModel = {
     speedScore?: number;
     /** Genra channel only: human-readable name from /v1/models. */
     displayName?: string;
+    /** Genra channel only: what the free plan may do with this model. */
+    freeTier?: FreeTierRule;
 };
 
 export type ModelChannel = {
@@ -30,6 +33,8 @@ export type ModelChannel = {
     apiKey: string;
     apiFormat: ApiCallFormat;
     models: ChannelModel[];
+    /** Genra channel only: the signed-in account's plan, from /v1/models. */
+    userTier?: UserTier;
 };
 
 export type AiConfig = {
@@ -322,7 +327,7 @@ export function normalizeChannelModels(models: Array<string | ChannelModel> | un
         seen.add(name);
         const capability = typeof item === "string" ? guessCapability(name) : item.capability || guessCapability(name);
         const script = typeof item === "string" ? undefined : item.script?.trim() || undefined;
-        const genraFields = typeof item === "string" ? {} : { ...(item.pricing ? { pricing: item.pricing } : {}), ...(item.speedScore === undefined ? {} : { speedScore: item.speedScore }), ...(item.displayName ? { displayName: item.displayName } : {}) };
+        const genraFields = typeof item === "string" ? {} : { ...(item.pricing ? { pricing: item.pricing } : {}), ...(item.speedScore === undefined ? {} : { speedScore: item.speedScore }), ...(item.displayName ? { displayName: item.displayName } : {}), ...(item.freeTier ? { freeTier: item.freeTier } : {}) };
         result.push({ name, capability, script, ...genraFields });
     }
     return result;
@@ -337,6 +342,7 @@ export function createModelChannel(channel?: Partial<ModelChannel>): ModelChanne
         apiKey: channel?.apiKey || "",
         apiFormat,
         models: normalizeChannelModels(channel?.models),
+        ...(channel?.userTier ? { userTier: channel.userTier } : {}),
     };
 }
 

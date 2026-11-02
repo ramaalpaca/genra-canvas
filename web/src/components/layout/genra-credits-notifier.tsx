@@ -14,7 +14,9 @@ export function GenraCreditsNotifier() {
     const queryClient = useQueryClient();
     const charge = useCreditsEvents((state) => state.charge);
     const insufficientSequence = useCreditsEvents((state) => state.insufficientSequence);
+    const upgradeSequence = useCreditsEvents((state) => state.upgradeSequence);
     const shownInsufficient = useRef(0);
+    const shownUpgrade = useRef(0);
 
     useEffect(() => {
         if (!charge) return;
@@ -41,6 +43,23 @@ export function GenraCreditsNotifier() {
         });
         void queryClient.invalidateQueries({ queryKey: ["genra", "credits"] });
     }, [insufficientSequence, notification, queryClient, t]);
+
+    useEffect(() => {
+        if (!upgradeSequence || upgradeSequence === shownUpgrade.current) return;
+        shownUpgrade.current = upgradeSequence;
+        // A fixed key replaces the open notice, so several locked clicks or refused requests show one.
+        notification.info({
+            key: "genra-upgrade",
+            title: t("genra.pricing.upgradeTitle"),
+            description: t("genra.pricing.upgradeDescription"),
+            actions: (
+                <Button type="primary" size="small" href={GENRA_TOP_UP_URL} target="_blank" rel="noopener noreferrer">
+                    {t("genra.pricing.upgradeAction")}
+                </Button>
+            ),
+            duration: 10,
+        });
+    }, [notification, t, upgradeSequence]);
 
     return null;
 }

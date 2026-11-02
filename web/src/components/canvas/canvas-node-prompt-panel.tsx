@@ -5,7 +5,8 @@ import { useTranslation } from "react-i18next";
 
 import { GenraCostEstimate } from "@/components/genra-cost-estimate";
 import { ModelPicker } from "@/components/model-picker";
-import { defaultConfig, resolveModelForCapability, useConfigStore, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
+import { applyFreeTierLimits } from "@/services/genra/free-tier";
+import { defaultConfig, modelOptionName, resolveModelForCapability, useConfigStore, useEffectiveConfig, type AiConfig } from "@/stores/use-config-store";
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { CanvasImageSettingsPopover } from "./canvas-image-settings-popover";
@@ -42,7 +43,8 @@ export function CanvasNodePromptPanel({ node, nodes, isRunning, onPromptChange, 
     const openConfigDialog = useConfigStore((state) => state.openConfigDialog);
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const mode = modeOverride ?? defaultMode(node.type);
-    const config = buildNodeConfig(globalConfig, node, mode);
+    const nodeConfig = buildNodeConfig(globalConfig, node, mode);
+    const config = applyFreeTierLimits(nodeConfig, mode, modelOptionName(nodeConfig.model));
     const hasTextContent = node.type === CanvasNodeType.Text && Boolean(node.metadata?.content?.trim());
     const hasImageContent = node.type === CanvasNodeType.Image && Boolean(node.metadata?.content);
     const isEditingExistingContent = hasTextContent || hasImageContent;
