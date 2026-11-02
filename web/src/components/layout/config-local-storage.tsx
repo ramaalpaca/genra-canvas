@@ -4,6 +4,7 @@ import { Database, HardDrive, Layers3, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useCloudSyncActive } from "@/services/genra/cloud-sync";
 import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 import { readLocalStorageUsage, type LocalStorageUsage } from "@/services/local-storage-usage";
 
@@ -23,6 +24,7 @@ export function ConfigLocalStorage({ active }: { active: boolean }) {
     const [usage, setUsage] = useState<LocalStorageUsage | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const cloudActive = useCloudSyncActive();
 
     const refresh = useCallback(async () => {
         setLoading(true);
@@ -45,7 +47,7 @@ export function ConfigLocalStorage({ active }: { active: boolean }) {
 
     return (
         <div className="space-y-3">
-            {GENRA_PRODUCTION_UI ? <Alert type="info" showIcon title={t("genra.localDataCacheNotice")} /> : null}
+            {GENRA_PRODUCTION_UI ? <Alert type="info" showIcon title={t(cloudActive ? "genra.cloudSync.cacheNotice" : "genra.localDataCacheNotice")} /> : null}
             <section className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

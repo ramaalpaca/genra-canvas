@@ -27,6 +27,7 @@ const IMAGE_PREVIEW_VERSION = 1;
 const IMAGE_DOWNLOAD_TIMEOUT_MS = 10 * 60_000;
 const IMAGE_REMOTE_LOAD_TIMEOUT_MS = 10 * 60_000;
 const IMAGE_DECODE_TIMEOUT_MS = 10_000;
+let remoteImageResolver: ((storageKey: string) => Promise<Blob | null>) | null = null;
 const IMAGE_RESPONSE_ERROR = "ImageResponseError";
 const IMAGE_TIMEOUT_ERROR = "ImageTimeoutError";
 
@@ -144,15 +145,23 @@ export async function resolveImageUrl(storageKey?: string, fallback = "") {
     if (!storageKey) return fallback;
     const cached = objectUrls.get(storageKey);
     if (cached) return cached;
-    const blob = await store.getItem<Blob>(storageKey);
+    const blob = await getImageBlob(storageKey);
     if (!blob) return fallback;
+    const stored = objectUrls.get(storageKey);
+    if (stored) return stored;
     const url = URL.createObjectURL(blob);
     objectUrls.set(storageKey, url);
     return url;
 }
 
-export async function getImageBlob(storageKey: string) {
-    return store.getItem<Blob>(storageKey);
+/** Fallback for blobs missing locally, e.g. a canvas that came from another device. It should save what it finds with setImageBlob. */
+export function setRemoteImageResolver(resolver: typeof remoteImageResolver) {
+    remoteImageResolver = resolver;
+}
+
+export async function getImageBlob(storageKey: string, options?: { localOnly?: boolean }) {
+    const blob = await store.getItem<Blob>(storageKey);
+    return blob || (options?.localOnly ? null : ((await remoteImageResolver?.(storageKey)) ?? null));
 }
 
 // 缩略图按图片的 storageKey 另存一份 WebP，只放在本地 IndexedDB 里，不写进节点数据，也不参与导出和 WebDAV 同步。

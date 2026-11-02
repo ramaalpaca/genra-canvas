@@ -11,11 +11,13 @@ import "@/i18n";
 import { initAnalytics } from "@/lib/analytics";
 import { router } from "@/router";
 import { startGenraSession } from "@/services/genra/channel";
+import { startCloudSync } from "@/services/genra/cloud-sync";
 import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 import { GENRA_FONT_STACK } from "@/services/genra/theme";
 
 initAnalytics();
 startGenraSession();
+startCloudSync();
 
 if (GENRA_PRODUCTION_UI) document.documentElement.dataset.genraUi = "production";
 document.body.style.fontFamily = GENRA_PRODUCTION_UI ? GENRA_FONT_STACK : '"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif';

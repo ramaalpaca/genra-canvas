@@ -4,6 +4,7 @@ import { Button, Dropdown, Modal, Tooltip, type MenuProps } from "antd";
 import { useTranslation } from "react-i18next";
 
 import { GenraAccountMenu, GenraCreditsBadge } from "@/components/layout/genra-account";
+import { GenraCloudSyncBadge } from "@/components/layout/genra-cloud-sync";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { canvasThemes } from "@/lib/canvas-theme";
 import { useCanvasSidePanelStore } from "@/stores/use-canvas-side-panel-store";
@@ -166,6 +167,7 @@ export function CanvasTopBar({
                 </div>
 
                 <div className="pointer-events-auto flex items-center gap-1.5">
+                    <GenraCloudSyncBadge style={{ color: theme.node.muted }} />
                     <GenraCreditsBadge style={{ color: theme.node.text, borderColor: theme.toolbar.border }} />
                     <UserStatusActions variant="canvas" onOpenShortcuts={() => setShortcutsOpen(true)} onOpenPlugins={onOpenPlugins} />
                     <GenraAccountMenu />
