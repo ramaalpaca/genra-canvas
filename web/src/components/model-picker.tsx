@@ -1,11 +1,12 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { Cpu } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "antd";
 
 import i18n from "@/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { unitPriceLabel } from "@/services/genra/pricing";
+import { isSlowModel, unitPriceLabel } from "@/services/genra/pricing";
 import { modelOptionLabel, modelOptionName, selectableModelsByCapability, type AiConfig, type ModelCapability } from "@/stores/use-config-store";
 
 type ModelPickerProps = {
@@ -63,6 +64,7 @@ export function ModelPicker({ config, value, onChange, capability, className, fu
             >
                 <ModelIcon model={current} />
                 <span className="canvas-model-picker-text min-w-0 flex-1 truncate text-left">{triggerLabel}</span>
+                <SlowModelTag model={current} className="canvas-model-picker-text" />
                 {hideTriggerPrice ? null : <ModelPrice model={current} className="canvas-model-picker-text" />}
             </SelectTrigger>
             <SelectContent
@@ -102,6 +104,7 @@ function ModelLabel({ config, model }: { config: AiConfig; model: string }) {
         <span className="flex w-full min-w-0 items-center gap-2">
             <ModelIcon model={model} />
             <span className="min-w-0 flex-1 truncate">{modelOptionLabel(config, model)}</span>
+            <SlowModelTag model={model} />
             <ModelPrice model={model} />
         </span>
     );
@@ -110,6 +113,17 @@ function ModelLabel({ config, model }: { config: AiConfig; model: string }) {
 function ModelPrice({ model, className }: { model: string; className?: string }) {
     const label = unitPriceLabel(modelOptionName(model));
     return label ? <span className={cn("shrink-0 text-xs opacity-60", className)}>{label}</span> : null;
+}
+
+function SlowModelTag({ model, className }: { model: string; className?: string }) {
+    const { t } = useTranslation();
+    if (!isSlowModel(modelOptionName(model))) return null;
+    return (
+        // Above the option list (z-[1200]), which would otherwise cover the tooltip.
+        <Tooltip title={t("genra.pricing.slowTooltip")} zIndex={1300}>
+            <span className={cn("shrink-0 rounded bg-stone-500/15 px-1 text-[10px] leading-4 text-stone-500 dark:text-stone-400", className)}>{t("genra.pricing.slowTag")}</span>
+        </Tooltip>
+    );
 }
 
 function ModelIcon({ model }: { model: string }) {

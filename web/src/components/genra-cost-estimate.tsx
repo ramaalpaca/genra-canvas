@@ -1,4 +1,4 @@
-// "≈ N credits" beside a generate button, with an orange hint when the balance looks short.
+// "≈ N credits" beside a generate button, with an orange hint when the balance looks short and a note for slow models.
 // The hint never blocks: the balance here can be up to 30 seconds old, and the backend answers 402 if it really is short.
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { parsePixelSize, clampVideoSeconds, parseVideoResolution } from "@/lib/media-size";
 import { cn } from "@/lib/utils";
 import { useCreditsBalance } from "@/services/genra/credits";
-import { estimateCost, formatCredits } from "@/services/genra/pricing";
+import { estimateCost, formatCredits, isSlowModel } from "@/services/genra/pricing";
 import { modelOptionName, type AiConfig } from "@/stores/use-config-store";
 
 type GenraCostEstimateProps = {
@@ -16,6 +16,8 @@ type GenraCostEstimateProps = {
     mode: string;
     /** Overrides `config.count` where the screen clamps it itself. */
     count?: number;
+    /** One line instead of two, for the fixed-height config node, where a second line pushes the button out. */
+    inline?: boolean;
     className?: string;
     style?: CSSProperties;
 };
@@ -29,16 +31,22 @@ function estimateForConfig(config: AiConfig, model: string, mode: string, count:
     return estimateCost(alias, { seconds: Number(clampVideoSeconds(config.videoSeconds)), resolution });
 }
 
-export function GenraCostEstimate({ config, model = config.model, mode, count, className, style }: GenraCostEstimateProps) {
+export function GenraCostEstimate({ config, model = config.model, mode, count, inline = false, className, style }: GenraCostEstimateProps) {
     const { t } = useTranslation();
     const { data } = useCreditsBalance();
     const estimate = estimateForConfig(config, model, mode, count);
-    if (estimate === undefined) return null;
-    const low = data !== undefined && data.total_credits < estimate;
+    const slow = (mode === "image" || mode === "video") && isSlowModel(modelOptionName(model));
+    if (estimate === undefined && !slow) return null;
+    const low = estimate !== undefined && data !== undefined && data.total_credits < estimate;
     return (
-        <span className={cn("flex items-center gap-1.5 whitespace-nowrap text-xs", className)} style={style}>
-            {low ? <span className="font-medium text-primary">{t("genra.pricing.lowBalance")}</span> : null}
-            <span>{t("genra.pricing.estimate", { amount: formatCredits(estimate) })}</span>
-        </span>
+        <div className={cn("flex text-xs", inline ? "flex-row-reverse items-center gap-2" : "flex-col items-end", className)} style={style}>
+            {estimate === undefined ? null : (
+                <span className="flex items-center gap-1.5 whitespace-nowrap">
+                    {low ? <span className="font-medium text-primary">{t("genra.pricing.lowBalance")}</span> : null}
+                    <span>{t("genra.pricing.estimate", { amount: formatCredits(estimate) })}</span>
+                </span>
+            )}
+            {slow ? <span className="whitespace-nowrap text-[11px] opacity-80">{t("genra.pricing.slowHint")}</span> : null}
+        </div>
     );
 }

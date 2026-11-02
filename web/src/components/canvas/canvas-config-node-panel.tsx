@@ -113,7 +113,7 @@ export function CanvasConfigNodePanel({ node, isRunning, inputSummary, onConfigC
             </div>
 
             <div className="mt-auto">
-                <GenraCostEstimate className="mb-1 justify-end" config={config} mode={mode} style={{ color: theme.node.muted }} />
+                <GenraCostEstimate className="mb-1" inline config={config} mode={mode} style={{ color: theme.node.muted }} />
                 <Button
                     type="primary"
                     className="!h-9 !w-full !cursor-pointer !rounded-lg"

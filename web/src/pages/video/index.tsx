@@ -460,7 +460,7 @@ export default function VideoPage() {
                         </div>
 
                         <div className="mt-auto pt-6">
-                            <GenraCostEstimate className="mb-2 justify-end" config={effectiveConfig} model={model} mode="video" />
+                            <GenraCostEstimate className="mb-2" config={effectiveConfig} model={model} mode="video" />
                             <Button type="primary" size="large" block icon={<Sparkles className="size-4" />} loading={running} disabled={!canGenerate || running} onClick={() => void generate()}>
                                 {t("workbench.generate")}
                             </Button>

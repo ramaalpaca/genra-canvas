@@ -3,12 +3,19 @@ import { beforeAll, describe, expect, test } from "bun:test";
 // pricing.ts imports i18n, which reads browser storage during module initialization.
 Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: () => null, setItem: () => undefined, removeItem: () => undefined } });
 const { default: i18n } = await import("../src/i18n");
-const { estimateCost, estimateFromPricing, formatCredits, getModelPricing, normalizePricing, pricingLabel, readCreditsCharge, resolutionTier, setModelPricing, unitPriceLabel } = await import("../src/services/genra/pricing");
+const { estimateCost, estimateFromPricing, formatCredits, getModelPricing, isSlowModel, normalizePricing, pricingLabel, readCreditsCharge, resolutionTier, setModelCatalog, unitPriceLabel } = await import("../src/services/genra/pricing");
 
 const video = { per_second: 8, resolution_multiplier: { "480p": 0.25, "720p": 0.5, "1080p": 0.5 } };
 
 beforeAll(() => {
-    setModelPricing([{ name: "nano-banana-pro", pricing: { per_unit: 1 } }, { name: "veo", pricing: video }, { name: "genra-text" }]);
+    setModelCatalog([
+        { name: "nano-banana-pro", pricing: { per_unit: 1 } },
+        { name: "veo", pricing: video, speedScore: 0.8 },
+        { name: "genra-text" },
+        { name: "minimax-h3", pricing: { per_second: 1 }, speedScore: 0.3 },
+        { name: "crawling", speedScore: 0 },
+        { name: "just-over", speedScore: 0.31 },
+    ]);
 });
 
 describe("normalizePricing", () => {
@@ -131,5 +138,23 @@ describe("readCreditsCharge", () => {
         expect(readCreditsCharge({ data: [] })).toBeNull();
         expect(readCreditsCharge(null)).toBeNull();
         expect(readCreditsCharge("text")).toBeNull();
+    });
+});
+
+describe("isSlowModel", () => {
+    test("a score at the threshold or below is slow, including zero", () => {
+        expect(isSlowModel("minimax-h3")).toBe(true);
+        expect(isSlowModel("crawling")).toBe(true);
+    });
+
+    test("a faster model is not slow", () => {
+        expect(isSlowModel("just-over")).toBe(false);
+        expect(isSlowModel("veo")).toBe(false);
+    });
+
+    test("no score, as on backends without the field, is not slow", () => {
+        expect(isSlowModel("nano-banana-pro")).toBe(false);
+        expect(isSlowModel("missing")).toBe(false);
+        expect(isSlowModel(undefined)).toBe(false);
     });
 });

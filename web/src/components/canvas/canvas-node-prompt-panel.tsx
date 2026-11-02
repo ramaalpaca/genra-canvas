@@ -92,7 +92,7 @@ export function CanvasNodePromptPanel({ node, nodes, isRunning, onPromptChange, 
             />
 
             {/* On its own line: the video settings row has no spare width next to the button. */}
-            <GenraCostEstimate className="mt-1 justify-end" config={config} mode={mode} style={{ color: theme.node.muted }} />
+            <GenraCostEstimate className="mt-1" config={config} mode={mode} style={{ color: theme.node.muted }} />
             <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
                     <Tooltip title={t("canvas.promptPanel.expandEditor")}>
