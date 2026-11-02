@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { unitPriceLabel } from "@/services/genra/pricing";
 import { modelOptionLabel, modelOptionName, selectableModelsByCapability, type AiConfig, type ModelCapability } from "@/stores/use-config-store";
 
 type ModelPickerProps = {
@@ -16,15 +17,19 @@ type ModelPickerProps = {
     fullWidth?: boolean;
     placeholder?: string;
     onMissingConfig?: () => void;
+    /** For triggers too narrow to fit both the name and the price. The option list still shows prices. */
+    hideTriggerPrice?: boolean;
 };
 
-export function ModelPicker({ config, value, onChange, capability, className, fullWidth = false, placeholder, onMissingConfig }: ModelPickerProps) {
+export function ModelPicker({ config, value, onChange, capability, className, fullWidth = false, placeholder, onMissingConfig, hideTriggerPrice = false }: ModelPickerProps) {
     const { t } = useTranslation();
     const pickerId = useId();
     const [open, setOpen] = useState(false);
     const options = useMemo(() => Array.from(new Set([...(config.channelMode === "local" && !capability ? [value] : []), ...selectableModelsByCapability(config, capability)].filter((model): model is string => Boolean(model)))), [capability, config, value]);
     const current = value || "";
     const pickerPlaceholder = placeholder || t("settingsPanels.model.select");
+    // A priced model is always a Genra one, so the channel suffix only costs width next to the price.
+    const triggerLabel = !current ? pickerPlaceholder : unitPriceLabel(modelOptionName(current)) ? modelOptionName(current) : modelOptionLabel(config, current);
 
     useEffect(() => {
         const closeOtherPicker = (event: Event) => {
@@ -57,11 +62,12 @@ export function ModelPicker({ config, value, onChange, capability, className, fu
                 title={current ? modelOptionLabel(config, current) : pickerPlaceholder}
             >
                 <ModelIcon model={current} />
-                <span className="canvas-model-picker-text min-w-0 flex-1 truncate text-left">{current ? modelOptionLabel(config, current) : pickerPlaceholder}</span>
+                <span className="canvas-model-picker-text min-w-0 flex-1 truncate text-left">{triggerLabel}</span>
+                {hideTriggerPrice ? null : <ModelPrice model={current} className="canvas-model-picker-text" />}
             </SelectTrigger>
             <SelectContent
                 data-canvas-no-zoom
-                className="z-[1200] w-80 max-w-[calc(100vw-24px)] rounded-xl border border-border/70 bg-popover p-1 shadow-xl"
+                className="z-[1200] w-[max(20rem,var(--radix-select-trigger-width))] max-w-[calc(100vw-24px)] rounded-xl border border-border/70 bg-popover p-1 shadow-xl"
                 position="popper"
                 align="start"
                 side="bottom"
@@ -71,7 +77,7 @@ export function ModelPicker({ config, value, onChange, capability, className, fu
             >
                 {options.length ? (
                     options.map((model) => (
-                        <SelectItem key={model} value={model} textValue={modelOptionLabel(config, model)}>
+                        <SelectItem key={model} className="[&>span:last-child]:min-w-0 [&>span:last-child]:flex-1" value={model} textValue={modelOptionLabel(config, model)}>
                             <ModelLabel config={config} model={model} />
                         </SelectItem>
                     ))
@@ -93,11 +99,17 @@ function emptyModelLabel(config: AiConfig, capability?: ModelCapability) {
 
 function ModelLabel({ config, model }: { config: AiConfig; model: string }) {
     return (
-        <span className="flex min-w-0 items-center gap-2">
+        <span className="flex w-full min-w-0 items-center gap-2">
             <ModelIcon model={model} />
-            <span className="truncate">{modelOptionLabel(config, model)}</span>
+            <span className="min-w-0 flex-1 truncate">{modelOptionLabel(config, model)}</span>
+            <ModelPrice model={model} />
         </span>
     );
+}
+
+function ModelPrice({ model, className }: { model: string; className?: string }) {
+    const label = unitPriceLabel(modelOptionName(model));
+    return label ? <span className={cn("shrink-0 text-xs opacity-60", className)}>{label}</span> : null;
 }
 
 function ModelIcon({ model }: { model: string }) {

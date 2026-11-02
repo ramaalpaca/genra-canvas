@@ -6,6 +6,7 @@ import { encodeChannelModel, modelOptionsFromChannels, normalizeModelOptionValue
 
 import { getGenraAccessToken, watchGenraSession } from "./auth";
 import { GENRA_CHANNEL_ID, GENRA_CHANNEL_LOCKED, GENRA_CHANNEL_NAME, GENRA_OPENAI_BASE_URL } from "./env";
+import { normalizePricing, setModelPricing } from "./pricing";
 
 type GenraModelItem = {
     id?: string;
@@ -25,7 +26,8 @@ export async function fetchGenraModels(accessToken: string): Promise<ChannelMode
     const response = await axios.get<{ data?: GenraModelItem[] }>(`${GENRA_OPENAI_BASE_URL}/v1/models`, { headers: { Authorization: `Bearer ${accessToken}` } });
     return (response.data.data || []).flatMap((item) => {
         const capability = item.genra?.capability as ModelCapability | undefined;
-        return item.id && capability && CAPABILITIES.includes(capability) ? [{ name: item.id, capability }] : [];
+        const pricing = normalizePricing(item.genra?.credits_pricing);
+        return item.id && capability && CAPABILITIES.includes(capability) ? [{ name: item.id, capability, ...(pricing ? { pricing } : {}) }] : [];
     });
 }
 
@@ -72,6 +74,9 @@ let modelsRequested = false;
  * and keep the channel's apiKey in sync whenever supabase-js refreshes the token.
  */
 export function startGenraSession() {
+    const syncPricing = () => setModelPricing(currentGenraChannel()?.models ?? []);
+    syncPricing();
+    useConfigStore.subscribe(syncPricing);
     return watchGenraSession((session) => {
         const existing = currentGenraChannel();
         if (existing?.apiKey !== session.access_token) writeGenraChannel(createGenraChannel(session.access_token, existing?.models || []));

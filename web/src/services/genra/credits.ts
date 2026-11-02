@@ -14,6 +14,7 @@ export type SubscriptionStatus = {
 };
 
 export const GENRA_PRICING_URL = `${GENRA_FRONTEND_URL}/pricing`;
+export const GENRA_TOP_UP_URL = `${GENRA_FRONTEND_URL}/my-account`;
 
 export async function fetchSubscriptionStatus(accessToken: string) {
     const response = await axios.get<SubscriptionStatus>(`${GENRA_API_URL}/api/v1/user/subscription/status`, { headers: { Authorization: `Bearer ${accessToken}` } });

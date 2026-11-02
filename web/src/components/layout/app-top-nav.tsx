@@ -7,6 +7,7 @@ import { navigationTools, visibleNavigationTools, type NavigationToolSlug } from
 import { AppConfigModal } from "@/components/layout/app-config-modal";
 import { GenraAboutModal, GenraAccountMenu, GenraCreditsBadge } from "@/components/layout/genra-account";
 import { GenraCloudSyncNotifier } from "@/components/layout/genra-cloud-sync";
+import { GenraCreditsNotifier } from "@/components/layout/genra-credits-notifier";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { cn } from "@/lib/utils";
@@ -103,6 +104,7 @@ export function AppTopNav() {
             <AppConfigModal />
             <GenraAboutModal />
             <GenraCloudSyncNotifier />
+            <GenraCreditsNotifier />
         </>
     );
 }
