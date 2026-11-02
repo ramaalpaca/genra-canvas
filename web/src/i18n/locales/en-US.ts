@@ -679,6 +679,16 @@ export default {
         modelsRefreshFailed: "Failed to load models from Genra",
         configSubtitle: "Default models, prompt sources, and cache",
         configDescription: "Generation runs through your Genra account and uses your credits; the model list comes from Genra.",
+        access: {
+            betaTitle: "Genra Canvas is in private beta",
+            betaDescription: "It's open to invited accounts for now. To get early access, send us a request.",
+            backToGenra: "Back to genra.ai",
+            requestAccess: "Request access",
+            requestSubject: "Genra Canvas access request: {{email}}",
+            unreachableTitle: "Can't connect right now",
+            unreachableDescription: "Check your connection and try again.",
+            retry: "Try again",
+        },
         cloudSync: {
             phase: { syncing: "Syncing", synced: "Synced", offline: "Offline", error: "Sync failed" },
             lastSynced: "Last synced: {{time}}",

@@ -10,6 +10,7 @@ import { collectMediaStorageKeys, getMediaBlob, setMediaBlob, setRemoteMediaReso
 import { collectImageStorageKeys, getImageBlob, setImageBlob, setRemoteImageResolver } from "@/services/image-storage";
 import { useCanvasStore, type CanvasProject } from "@/stores/canvas/use-canvas-store";
 
+import { isCanvasAccessEnabled, useCanvasAccess } from "./access";
 import { getGenraAccessToken, useGenraAuth } from "./auth";
 import { CloudSyncError, createCloudClient, type CloudUsage } from "./cloud-sync-client";
 import { createCloudSyncEngine, emptyCloudSyncState, type CloudSyncLocal, type CloudSyncNotice, type CloudSyncState } from "./cloud-sync-engine";
@@ -231,7 +232,7 @@ function whenAuthResolved() {
 async function resolveRemoteFile(storageKey: string, save: (key: string, blob: Blob) => Promise<unknown>): Promise<Blob | null> {
     await whenAuthResolved();
     // Previews and URLs ask repeatedly, so remember misses instead of hitting the API on every render.
-    if (!useGenraAuth.getState().user || !STORAGE_KEY_PATTERN.test(storageKey) || (remoteMisses.get(storageKey) ?? 0) > Date.now()) return null;
+    if (!useGenraAuth.getState().user || !isCanvasAccessEnabled() || !STORAGE_KEY_PATTERN.test(storageKey) || (remoteMisses.get(storageKey) ?? 0) > Date.now()) return null;
     let download = remoteDownloads.get(storageKey);
     if (!download) {
         download = withDownloadSlot(() => client.downloadFile(storageKey))
@@ -258,7 +259,7 @@ export function startCloudSync() {
 
     let currentUserId: string | null = null;
     const update = () => {
-        const userId = useCanvasStore.getState().hydrated ? (useGenraAuth.getState().user?.id ?? null) : null;
+        const userId = useCanvasStore.getState().hydrated && isCanvasAccessEnabled() ? (useGenraAuth.getState().user?.id ?? null) : null;
         if (userId === currentUserId) return;
         currentUserId = userId;
         session?.dispose();
@@ -266,5 +267,6 @@ export function startCloudSync() {
     };
     useGenraAuth.subscribe(update);
     useCanvasStore.subscribe(update);
+    useCanvasAccess.subscribe(update);
     update();
 }
