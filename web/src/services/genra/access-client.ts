@@ -7,19 +7,21 @@ export type CanvasAccessMode = "beta" | "all";
 export type CanvasAccessResult = { status: "enabled" | "disabled"; mode: CanvasAccessMode } | { status: "unauthorized" } | { status: "unreachable" };
 
 /** The canvas API, the OpenAI facade and FastAPI wrap errors differently, so accept each shape the code can arrive in. */
-export function isCanvasNotEnabledBody(value: unknown): boolean {
+export function hasErrorCode(value: unknown, code: string): boolean {
     if (typeof value === "string") {
-        if (value === CANVAS_NOT_ENABLED) return true;
+        if (value === code) return true;
         try {
-            return isCanvasNotEnabledBody(JSON.parse(value));
+            return hasErrorCode(JSON.parse(value), code);
         } catch {
             return false;
         }
     }
     if (!value || typeof value !== "object") return false;
     const body = value as Record<string, unknown>;
-    return [body.code, body.error, body.detail].some((field) => field === CANVAS_NOT_ENABLED || (typeof field === "object" && isCanvasNotEnabledBody(field)));
+    return [body.code, body.error, body.detail].some((field) => field === code || (typeof field === "object" && hasErrorCode(field, code)));
 }
+
+export const isCanvasNotEnabledBody = (value: unknown) => hasErrorCode(value, CANVAS_NOT_ENABLED);
 
 export async function checkCanvasAccess({ url, token, fetchImpl }: { url: string; token: string; fetchImpl?: typeof fetch }): Promise<CanvasAccessResult> {
     let response: Response;

@@ -1,11 +1,14 @@
 import { type ReactNode, useState } from "react";
 import { ConfigProvider, Switch } from "antd";
+import { Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import i18n from "@/i18n";
 import { type CanvasTheme } from "@/lib/canvas-theme";
 import { computeMediaSize, inferMediaRatio, inferMediaScale, mediaRatioOptions, mediaScaleOptions, readMediaDimensions } from "@/lib/media-size";
-import type { AiConfig } from "@/stores/use-config-store";
+import { promptUpgrade } from "@/services/genra/credits-events";
+import { imageScaleCap } from "@/services/genra/free-tier";
+import { modelOptionName, type AiConfig } from "@/stores/use-config-store";
 
 const qualityOptions = [
     { value: "auto", labelKey: "auto" },
@@ -23,6 +26,8 @@ export const imageScaleOptions = mediaScaleOptions.map((value) => ({ value, labe
 
 type ImageSettingsPanelProps = {
     config: AiConfig;
+    /** Selected model, for screens that keep it in `imageModel` rather than `config.model`. */
+    model?: string;
     onConfigChange: (key: "quality" | "size" | "count" | "background", value: string) => void;
     theme: CanvasTheme;
     showTitle?: boolean;
@@ -31,7 +36,7 @@ type ImageSettingsPanelProps = {
     quickCount?: number;
 };
 
-export function ImageSettingsPanel({ config, onConfigChange, theme, showTitle = true, className = "w-[320px] space-y-4 rounded-2xl px-1 py-0.5", maxCount = 15, quickCount = 10 }: ImageSettingsPanelProps) {
+export function ImageSettingsPanel({ config, model = config.model, onConfigChange, theme, showTitle = true, className = "w-[320px] space-y-4 rounded-2xl px-1 py-0.5", maxCount = 15, quickCount = 10 }: ImageSettingsPanelProps) {
     const { t } = useTranslation();
     const [snapDimensionToStep, setSnapDimensionToStep] = useState(true);
     const quality = config.quality || "auto";
@@ -41,6 +46,7 @@ export function ImageSettingsPanel({ config, onConfigChange, theme, showTitle = 
     const selectedScale = inferMediaScale(activeSize);
     const selectedRatio = inferMediaRatio(activeSize);
     const dimensions = readMediaDimensions(activeSize, selectedScale, selectedRatio);
+    const scaleCap = imageScaleCap(modelOptionName(model));
     const applySize = (scale: string, ratio: string) => onConfigChange("size", computeMediaSize(scale, ratio));
     const selectScale = (scale: string) => applySize(scale, selectedRatio === "auto" ? "1:1" : selectedRatio);
     const selectRatio = (ratio: string) => applySize(selectedScale, ratio);
@@ -86,25 +92,28 @@ export function ImageSettingsPanel({ config, onConfigChange, theme, showTitle = 
                         </div>
                     </div>
                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2.5">
-                        <DimensionInput prefix="W" value={dimensions.width} disabled={selectedRatio === "auto"} theme={theme} alignToStep={snapDimensionToStep} onChange={(value) => updateDimension("width", value)} />
+                        <DimensionInput prefix="W" value={dimensions.width} disabled={selectedRatio === "auto" || Boolean(scaleCap)} theme={theme} alignToStep={snapDimensionToStep} onChange={(value) => updateDimension("width", value)} />
                         <span className="text-lg opacity-45">↔</span>
-                        <DimensionInput prefix="H" value={dimensions.height} disabled={selectedRatio === "auto"} theme={theme} alignToStep={snapDimensionToStep} onChange={(value) => updateDimension("height", value)} />
+                        <DimensionInput prefix="H" value={dimensions.height} disabled={selectedRatio === "auto" || Boolean(scaleCap)} theme={theme} alignToStep={snapDimensionToStep} onChange={(value) => updateDimension("height", value)} />
                     </div>
                 </div>
                 <div className="space-y-2.5">
                     <SettingTitle color={theme.node.muted}>{t("settingsPanels.image.resolution")}</SettingTitle>
                     <div className="grid grid-cols-4 gap-2.5">
-                        {mediaScaleOptions.map((value) => (
-                            <OptionPill key={value} selected={selectedScale === value} theme={theme} onClick={() => selectScale(value)}>
-                                {value === "auto" ? t("settingsPanels.common.auto") : value}
-                            </OptionPill>
-                        ))}
+                        {mediaScaleOptions.map((value) => {
+                            const locked = Boolean(scaleCap) && value !== scaleCap;
+                            return (
+                                <OptionPill key={value} selected={selectedScale === value} locked={locked} theme={theme} onClick={() => (locked ? promptUpgrade() : selectScale(value))}>
+                                    {value === "auto" ? t("settingsPanels.common.auto") : value}
+                                </OptionPill>
+                            );
+                        })}
                     </div>
                 </div>
                 <div className="space-y-2.5">
                     <SettingTitle color={theme.node.muted}>{t("settingsPanels.image.aspectRatio")}</SettingTitle>
                     <div className="grid grid-cols-4 gap-2.5">
-                        {mediaRatioOptions.map((item) => (
+                        {mediaRatioOptions.filter((item) => !scaleCap || item.value !== "auto").map((item) => (
                             <button
                                 key={item.value}
                                 type="button"
@@ -174,15 +183,16 @@ export function imageSizeLabel(size: string) {
     return `${scale} · ${ratio}`;
 }
 
-function OptionPill({ selected, theme, onClick, children }: { selected: boolean; theme: CanvasTheme; onClick: () => void; children: ReactNode }) {
+function OptionPill({ selected, locked = false, theme, onClick, children }: { selected: boolean; locked?: boolean; theme: CanvasTheme; onClick: () => void; children: ReactNode }) {
     return (
         <button
             type="button"
-            className="h-9 cursor-pointer rounded-full border px-2 text-sm transition hover:opacity-80"
-            style={{ background: "transparent", borderColor: selected ? theme.node.text : theme.node.stroke, color: theme.node.text }}
+            className="inline-flex h-9 cursor-pointer items-center justify-center gap-1 rounded-full border px-2 text-sm transition hover:opacity-80"
+            style={{ background: "transparent", borderColor: selected ? theme.node.text : theme.node.stroke, color: theme.node.text, opacity: locked ? 0.45 : undefined }}
             onMouseDown={(event) => event.stopPropagation()}
             onClick={onClick}
         >
+            {locked ? <Lock className="size-3" /> : null}
             {children}
         </button>
     );
