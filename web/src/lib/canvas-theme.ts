@@ -1,7 +1,10 @@
+import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
+import { genraCanvasThemes } from "@/services/genra/theme";
+
 export type CanvasColorTheme = "light" | "dark";
 export type CanvasBackgroundMode = "dots" | "lines" | "blank";
 
-export const canvasThemes = {
+const upstreamCanvasThemes = {
     light: {
         canvas: {
             background: "#f4f2ed",
@@ -60,4 +63,7 @@ export const canvasThemes = {
     },
 } as const;
 
-export type CanvasTheme = (typeof canvasThemes)[CanvasColorTheme];
+type WidenTheme<T> = { [Section in keyof T]: { [Key in keyof T[Section]]: string } };
+export type CanvasTheme = WidenTheme<(typeof upstreamCanvasThemes)["light"]>;
+
+export const canvasThemes: Record<CanvasColorTheme, CanvasTheme> = GENRA_PRODUCTION_UI ? genraCanvasThemes : upstreamCanvasThemes;
