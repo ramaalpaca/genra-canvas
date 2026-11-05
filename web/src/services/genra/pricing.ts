@@ -2,6 +2,7 @@
 // Mirrors the backend's calculate_credits_cost (video_mvp backend/shared/supabase/usage_reporter.py), so an estimate
 // matches the charge. Prices arrive with GET /openai/v1/models and persist on the channel models in config.
 import i18n from "@/i18n";
+import { inferMediaScale } from "@/lib/media-size";
 
 export type CreditsPricing = {
     base?: number;
@@ -11,7 +12,11 @@ export type CreditsPricing = {
     resolution_multiplier?: Record<string, number>;
 };
 
-export type CostEstimateInput = { count?: number; seconds?: number; resolution?: string };
+/**
+ * `imageSize` is the image tier ("2K") or the pixel size that implies it ("2048x1152"). Image estimates fall back to
+ * `resolution` when it is missing, so a caller that only knows the request's `size` still gets the multiplier.
+ */
+export type CostEstimateInput = { count?: number; seconds?: number; resolution?: string; imageSize?: string };
 
 const NUMERIC_FIELDS = ["base", "per_unit", "per_second", "per_char"] as const;
 /** At or below this `speed_score` a model counts as slow; generation usually takes minutes. */
@@ -74,15 +79,34 @@ function resolutionMultiplier(pricing: CreditsPricing, resolution: string | unde
     return multipliers[tier] ?? 1;
 }
 
+/**
+ * Image tier key as the backend bills it: "1K" / "2K" / "4K". Pixel sizes are classed like the canvas's own
+ * inferMediaScale (presets first, then the long edge), which the backend copies. "auto" and ratios have no tier.
+ */
+export function imageSizeKey(value: string | undefined) {
+    const raw = String(value ?? "")
+        .trim()
+        .toLowerCase();
+    const tier = /^[124]k$/.test(raw) ? raw : /^\d+x\d+$/.test(raw) ? inferMediaScale(raw) : undefined;
+    return tier === "1k" || tier === "2k" || tier === "4k" ? tier.toUpperCase() : undefined;
+}
+
+/** Keys must match exactly, as on the backend; a model without the key (or a 1K request) is billed at 1x. */
+function imageSizeMultiplier(pricing: CreditsPricing, imageSize: string | undefined) {
+    const key = imageSizeKey(imageSize);
+    if (!key) return 1;
+    return pricing.resolution_multiplier?.[key] ?? 1;
+}
+
 function ceilToCents(value: number) {
     // The epsilon absorbs float noise, so 12.000000000000002 stays 12 and doesn't round up to 12.01.
     return Math.ceil((value - 1e-9) * 100) / 100;
 }
 
-export function estimateFromPricing(pricing: CreditsPricing, { count = 1, seconds = 0, resolution }: CostEstimateInput) {
+export function estimateFromPricing(pricing: CreditsPricing, { count = 1, seconds = 0, resolution, imageSize }: CostEstimateInput) {
     const base = pricing.base ?? 0;
     if (pricing.per_second) return ceilToCents((base + pricing.per_second * seconds) * resolutionMultiplier(pricing, resolution));
-    if (pricing.per_unit) return ceilToCents(base + pricing.per_unit * Math.max(1, count));
+    if (pricing.per_unit) return ceilToCents((base + pricing.per_unit * Math.max(1, count)) * imageSizeMultiplier(pricing, imageSize ?? resolution));
     return undefined;
 }
 

@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, test } from "bun:test";
 // pricing.ts imports i18n, which reads browser storage during module initialization.
 Object.defineProperty(globalThis, "localStorage", { configurable: true, value: { getItem: () => null, setItem: () => undefined, removeItem: () => undefined } });
 const { default: i18n } = await import("../src/i18n");
-const { estimateCost, estimateFromPricing, formatCredits, getModelPricing, isSlowModel, normalizePricing, pricingLabel, readCreditsCharge, resolutionTier, setModelCatalog, unitPriceLabel } = await import("../src/services/genra/pricing");
+const { estimateCost, estimateFromPricing, formatCredits, imageSizeKey, getModelPricing, isSlowModel, normalizePricing, pricingLabel, readCreditsCharge, resolutionTier, setModelCatalog, unitPriceLabel } = await import("../src/services/genra/pricing");
 
 const video = { per_second: 8, resolution_multiplier: { "480p": 0.25, "720p": 0.5, "1080p": 0.5 } };
 
@@ -156,5 +156,52 @@ describe("isSlowModel", () => {
         expect(isSlowModel("nano-banana-pro")).toBe(false);
         expect(isSlowModel("missing")).toBe(false);
         expect(isSlowModel(undefined)).toBe(false);
+    });
+});
+
+describe("image size multiplier", () => {
+    const banana21 = { per_unit: 1, resolution_multiplier: { "2K": 1.5, "4K": 3.4 } };
+
+    test("tier keys and pixel sizes map to the backend's 1K / 2K / 4K keys", () => {
+        expect(imageSizeKey("2k")).toBe("2K");
+        expect(imageSizeKey("4K")).toBe("4K");
+        expect(imageSizeKey("1024x1024")).toBe("1K");
+        expect(imageSizeKey("1536x864")).toBe("1K");
+        expect(imageSizeKey("2048x1152")).toBe("2K");
+        expect(imageSizeKey("3840x1648")).toBe("4K");
+    });
+
+    test("auto and ratios have no tier", () => {
+        expect(imageSizeKey("auto")).toBeUndefined();
+        expect(imageSizeKey("16:9")).toBeUndefined();
+        expect(imageSizeKey(undefined)).toBeUndefined();
+    });
+
+    test("the estimate follows the selected size", () => {
+        expect(estimateFromPricing(banana21, { count: 2, imageSize: "1024x1024" })).toBe(2);
+        expect(estimateFromPricing(banana21, { count: 2, imageSize: "2048x1152" })).toBe(3);
+        expect(estimateFromPricing(banana21, { count: 1, imageSize: "4k" })).toBe(3.4);
+    });
+
+    test("base is multiplied too, as on the backend", () => {
+        expect(estimateFromPricing({ base: 1, per_unit: 1, resolution_multiplier: { "2K": 1.5 } }, { count: 1, imageSize: "2K" })).toBe(3);
+    });
+
+    test("a missing key, a model without multipliers and auto size are 1x", () => {
+        expect(estimateFromPricing({ per_unit: 1, resolution_multiplier: { "2K": 1.5 } }, { count: 1, imageSize: "4K" })).toBe(1);
+        expect(estimateFromPricing({ per_unit: 2 }, { count: 1, imageSize: "4K" })).toBe(2);
+        expect(estimateFromPricing(banana21, { count: 1, imageSize: "auto" })).toBe(1);
+    });
+
+    test("a caller that only passes the request size as resolution still gets the multiplier", () => {
+        expect(estimateFromPricing(banana21, { count: 1, resolution: "2048x2048" })).toBe(1.5);
+    });
+
+    test("video multipliers are untouched by image keys", () => {
+        expect(estimateFromPricing({ per_second: 8, resolution_multiplier: { "720p": 0.5, "2K": 9 } }, { seconds: 6, resolution: "720" })).toBe(24);
+    });
+
+    test("the model list label stays at the 1K price", () => {
+        expect(pricingLabel(banana21)).toBe("1 credit / image");
     });
 });
