@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { cn } from "@/lib/utils";
 import { promptUpgrade } from "@/services/genra/credits-events";
 import { isModelLocked } from "@/services/genra/free-tier";
+import { trackUpgradeClick } from "@/services/genra/tracker";
 import { isSlowModel, unitPriceLabel } from "@/services/genra/pricing";
 import { modelOptionLabel, modelOptionName, selectableModelsByCapability, type AiConfig, type ModelCapability } from "@/stores/use-config-store";
 
@@ -53,8 +54,10 @@ export function ModelPicker({ config, value, onChange, capability, className, fu
             }}
             onValueChange={(model) => {
                 // Locked models stay in the list, so choosing one explains the plan instead of switching to it.
-                if (isModelLocked(modelOptionName(model))) promptUpgrade();
-                else onChange(model);
+                if (isModelLocked(modelOptionName(model))) {
+                    trackUpgradeClick("locked_model");
+                    promptUpgrade();
+                } else onChange(model);
             }}
         >
             <SelectTrigger

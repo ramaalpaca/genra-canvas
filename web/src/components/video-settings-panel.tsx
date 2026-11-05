@@ -9,6 +9,7 @@ import { type CanvasTheme } from "@/lib/canvas-theme";
 import { clampVideoSeconds, computeVideoSize, inferVideoRatio, parseVideoResolution, readVideoDimensions, VIDEO_SECONDS_MAX, VIDEO_SECONDS_MIN, videoRatioOptions } from "@/lib/media-size";
 import { promptUpgrade } from "@/services/genra/credits-events";
 import { videoResolutionCap } from "@/services/genra/free-tier";
+import { trackUpgradeClick } from "@/services/genra/tracker";
 import { modelOptionName, type AiConfig } from "@/stores/use-config-store";
 
 const resolutionOptions = [
@@ -61,7 +62,7 @@ export function VideoSettingsPanel({ config, model = config.model, onConfigChang
                         {resolutionOptions.map((item) => {
                             const locked = resolutionCap !== undefined && Number(item.value) > resolutionCap;
                             return (
-                                <OptionPill key={item.value} selected={resolution === item.value} locked={locked} theme={theme} onClick={() => (locked ? promptUpgrade() : selectResolution(item.value))}>
+                                <OptionPill key={item.value} selected={resolution === item.value} locked={locked} theme={theme} onClick={() => (locked ? (trackUpgradeClick("locked_resolution"), promptUpgrade()) : selectResolution(item.value))}>
                                     {item.label}
                                 </OptionPill>
                             );

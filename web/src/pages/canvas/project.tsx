@@ -73,6 +73,7 @@ import { getNodeDefinition, isBuiltinNodeType as isBuiltinType, useNodeRegistryV
 import { registerBuiltinNodes } from "@/components/canvas/nodes/builtin-nodes";
 import { importCanvasPackage } from "@/lib/canvas/canvas-import";
 import { useCloudProjectReloadToken } from "@/services/genra/cloud-sync";
+import { trackCanvasOpen } from "@/services/genra/tracker";
 import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
 
 // Genra: the plugin manager installs remote JS from arbitrary URLs. Dropped from production builds (dead branch under the
@@ -479,6 +480,7 @@ function InfiniteCanvasPage() {
             };
             setHistoryState({ canUndo: false, canRedo: false });
             setProjectLoaded(true);
+            trackCanvasOpen("canvas", { project_id: projectId, node_count: restoredNodes.length });
         };
         void restore();
     }, [hydrated, navigate, openProject, projectId, cloudReloadToken]);

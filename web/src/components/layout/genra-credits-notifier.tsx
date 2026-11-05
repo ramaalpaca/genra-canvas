@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { GENRA_TOP_UP_URL, type SubscriptionStatus } from "@/services/genra/credits";
 import { useCreditsEvents } from "@/services/genra/credits-events";
+import { trackUpgradeClick } from "@/services/genra/tracker";
 import { formatCredits } from "@/services/genra/pricing";
 
 export function GenraCreditsNotifier() {
@@ -53,7 +54,7 @@ export function GenraCreditsNotifier() {
             title: t("genra.pricing.upgradeTitle"),
             description: t("genra.pricing.upgradeDescription"),
             actions: (
-                <Button type="primary" size="small" href={GENRA_TOP_UP_URL} target="_blank" rel="noopener noreferrer">
+                <Button type="primary" size="small" href={GENRA_TOP_UP_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackUpgradeClick("upgrade_button")}>
                     {t("genra.pricing.upgradeAction")}
                 </Button>
             ),

@@ -15,6 +15,7 @@ import { getGenraAccessToken, useGenraAuth } from "./auth";
 import { CloudSyncError, createCloudClient, type CloudUsage } from "./cloud-sync-client";
 import { createCloudSyncEngine, emptyCloudSyncState, type CloudSyncLocal, type CloudSyncNotice, type CloudSyncState } from "./cloud-sync-engine";
 import { GENRA_API_URL, GENRA_CLOUD_SYNC_ENABLED } from "./env";
+import { resetSyncErrorStreak, trackSyncError } from "./tracker";
 
 const PUSH_DEBOUNCE_MS = 3_000;
 const POLL_INTERVAL_MS = 60_000;
@@ -143,6 +144,7 @@ function startSession(userId: string): Session {
             await withSyncLock(() => engine.run({ remote }));
             failures = 0;
             retryAt = 0;
+            resetSyncErrorStreak();
             if (!disposed) useCloudSyncStatus.setState({ phase: "synced" });
         } catch (error) {
             failures += 1;
@@ -150,6 +152,7 @@ function startSession(userId: string): Session {
             const network = !navigator.onLine || (error instanceof CloudSyncError && error.isNetworkError);
             if (!disposed) useCloudSyncStatus.setState({ phase: network ? "offline" : "error" });
             console.warn("[genra] canvas sync failed", error);
+            trackSyncError(error, failures);
         } finally {
             running = false;
             const next = queuedRemote;
