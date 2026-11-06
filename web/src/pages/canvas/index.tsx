@@ -10,6 +10,7 @@ import { GenraLocalDataNotice } from "@/components/canvas/genra-local-data-notic
 import { GenraCloudSyncBadge } from "@/components/layout/genra-cloud-sync";
 import { importCanvasPackage } from "@/lib/canvas/canvas-import";
 import { GENRA_PRODUCTION_UI } from "@/services/genra/env";
+import { trackCanvasOpen } from "@/services/genra/tracker";
 import { useCanvasStore } from "@/stores/canvas/use-canvas-store";
 import { useCanvasUiStore } from "@/stores/canvas/use-canvas-ui-store";
 import { exportCanvasProjects } from "@/lib/canvas/canvas-export";
@@ -24,6 +25,9 @@ export default function CanvasPage() {
     const autoOpenRef = useRef(false);
     const hydrated = useCanvasStore((state) => state.hydrated);
     const projects = useCanvasStore((state) => state.projects);
+    useEffect(() => {
+        if (hydrated) trackCanvasOpen("list", { project_count: useCanvasStore.getState().projects.length });
+    }, [hydrated]);
     const createProject = useCanvasStore((state) => state.createProject);
     const importProject = useCanvasStore((state) => state.importProject);
     const selectedIds = useCanvasUiStore((state) => state.selectedProjectIds);

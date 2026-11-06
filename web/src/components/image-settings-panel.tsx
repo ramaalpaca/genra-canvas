@@ -8,6 +8,7 @@ import { type CanvasTheme } from "@/lib/canvas-theme";
 import { computeMediaSize, inferMediaRatio, inferMediaScale, mediaRatioOptions, mediaScaleOptions, readMediaDimensions } from "@/lib/media-size";
 import { promptUpgrade } from "@/services/genra/credits-events";
 import { imageScaleCap } from "@/services/genra/free-tier";
+import { trackUpgradeClick } from "@/services/genra/tracker";
 import { modelOptionName, type AiConfig } from "@/stores/use-config-store";
 
 const qualityOptions = [
@@ -103,7 +104,7 @@ export function ImageSettingsPanel({ config, model = config.model, onConfigChang
                         {mediaScaleOptions.map((value) => {
                             const locked = Boolean(scaleCap) && value !== scaleCap;
                             return (
-                                <OptionPill key={value} selected={selectedScale === value} locked={locked} theme={theme} onClick={() => (locked ? promptUpgrade() : selectScale(value))}>
+                                <OptionPill key={value} selected={selectedScale === value} locked={locked} theme={theme} onClick={() => (locked ? (trackUpgradeClick("locked_image_size"), promptUpgrade()) : selectScale(value))}>
                                     {value === "auto" ? t("settingsPanels.common.auto") : value}
                                 </OptionPill>
                             );
