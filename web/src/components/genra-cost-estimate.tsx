@@ -25,7 +25,8 @@ type GenraCostEstimateProps = {
 
 function estimateForConfig(config: AiConfig, model: string, mode: string, count: number | undefined) {
     const alias = modelOptionName(model);
-    if (mode === "image") return estimateCost(alias, { count: count ?? Math.max(1, Math.floor(Number(config.count) || 1)) });
+    // The model list shows the 1K price; the estimate follows the size picked here (already limited to 1K on the free plan).
+    if (mode === "image") return estimateCost(alias, { count: count ?? Math.max(1, Math.floor(Number(config.count) || 1)), imageSize: config.size });
     if (mode !== "video") return undefined;
     // In ratio mode `size` is "16:9" or "auto", so the tier comes from the resolution setting.
     const resolution = parsePixelSize(config.size) ? config.size : parseVideoResolution(config.vquality);
