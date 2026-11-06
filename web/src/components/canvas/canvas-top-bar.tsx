@@ -4,6 +4,7 @@ import { Button, Dropdown, Modal, Tooltip, type MenuProps } from "antd";
 import { useTranslation } from "react-i18next";
 
 import { GenraAccountMenu, GenraCreditsBadge } from "@/components/layout/genra-account";
+import { GenraBetaBadge } from "@/components/layout/genra-beta-badge";
 import { GenraCloudSyncBadge } from "@/components/layout/genra-cloud-sync";
 import { UserStatusActions } from "@/components/layout/user-status-actions";
 import { canvasThemes } from "@/lib/canvas-theme";
@@ -163,6 +164,8 @@ export function CanvasTopBar({
                             </button>
                         )}
                     </div>
+                    {/* The canvas page has no brand name in its bar, so the mark sits after the canvas title. */}
+                    <GenraBetaBadge style={{ color: theme.node.text }} />
                     {GENRA_LOCAL_AGENT_ENABLED ? <CompactAgentStatus status={compactAgentStatus} onClick={onToggleAgent} /> : null}
                 </div>
 

@@ -6,6 +6,7 @@ import { Dropdown, Modal, Tooltip } from "antd";
 import { Trans, useTranslation } from "react-i18next";
 import { create } from "zustand";
 
+import { GenraBetaBadge } from "@/components/layout/genra-beta-badge";
 import { APP_VERSION } from "@/constant/env";
 import { signOutGenra, useGenraAuth } from "@/services/genra/auth";
 import { GENRA_FRONTEND_URL, GENRA_PRODUCTION_UI, UPSTREAM_AUTHOR, UPSTREAM_REPO_URL } from "@/services/genra/env";
@@ -131,7 +132,10 @@ export function GenraAboutModal() {
                 <img src="/genra-logo.png" alt="" className="size-14" />
                 <div>
                     <div className="text-base font-semibold">Genra Canvas</div>
-                    <div className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t("genra.aboutVersion", { version: APP_VERSION })}</div>
+                    <div className="mt-1 flex items-center justify-center gap-1.5 text-xs text-stone-500 dark:text-stone-400">
+                        {t("genra.aboutVersion", { version: APP_VERSION })}
+                        <GenraBetaBadge />
+                    </div>
                 </div>
                 <div className="text-xs text-stone-500 dark:text-stone-400">
                     <Trans i18nKey="genra.aboutBasedOn" values={{ author: UPSTREAM_AUTHOR }} components={{ upstream: <a href={UPSTREAM_REPO_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" /> }} />

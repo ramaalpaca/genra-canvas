@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { navigationTools, visibleNavigationTools, type NavigationToolSlug } from "@/constant/navigation-tools";
 import { AppConfigModal } from "@/components/layout/app-config-modal";
 import { GenraAboutModal, GenraAccountMenu, GenraCreditsBadge } from "@/components/layout/genra-account";
+import { GenraBetaBadge } from "@/components/layout/genra-beta-badge";
 import { GenraCloudSyncNotifier } from "@/components/layout/genra-cloud-sync";
 import { GenraCreditsNotifier } from "@/components/layout/genra-credits-notifier";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
@@ -51,6 +52,7 @@ export function AppTopNav() {
                                     }}
                                 />
                                 <span className="text-base font-medium">{t("meta.title")}</span>
+                                <GenraBetaBadge />
                             </Link>
 
                             <button
