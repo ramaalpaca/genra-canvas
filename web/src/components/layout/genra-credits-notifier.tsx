@@ -4,7 +4,7 @@ import { App, Button } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
-import { GENRA_TOP_UP_URL, type SubscriptionStatus } from "@/services/genra/credits";
+import { GENRA_PRICING_URL, GENRA_TOP_UP_URL, type SubscriptionStatus } from "@/services/genra/credits";
 import { useCreditsEvents } from "@/services/genra/credits-events";
 import { trackUpgradeClick } from "@/services/genra/tracker";
 import { formatCredits } from "@/services/genra/pricing";
@@ -36,7 +36,7 @@ export function GenraCreditsNotifier() {
             title: t("genra.pricing.insufficientTitle"),
             description: t("genra.pricing.insufficientDescription"),
             actions: (
-                <Button type="primary" size="small" href={GENRA_TOP_UP_URL} target="_blank" rel="noopener noreferrer">
+                <Button type="primary" size="small" href={GENRA_TOP_UP_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackUpgradeClick("top_up_button")}>
                     {t("genra.pricing.topUp")}
                 </Button>
             ),
@@ -54,7 +54,7 @@ export function GenraCreditsNotifier() {
             title: t("genra.pricing.upgradeTitle"),
             description: t("genra.pricing.upgradeDescription"),
             actions: (
-                <Button type="primary" size="small" href={GENRA_TOP_UP_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackUpgradeClick("upgrade_button")}>
+                <Button type="primary" size="small" href={GENRA_PRICING_URL} target="_blank" rel="noopener noreferrer" onClick={() => trackUpgradeClick("upgrade_button")}>
                     {t("genra.pricing.upgradeAction")}
                 </Button>
             ),
