@@ -63,8 +63,8 @@ export function trackCanvasOpen(surface: "list" | "canvas", data: { project_id?:
     track("canvas_open", { surface, ...data });
 }
 
-/** `action` separates clicking something locked from pressing the upgrade button itself. */
-export function trackUpgradeClick(action: "locked_model" | "locked_resolution" | "locked_image_size" | "upgrade_button") {
+/** `action` separates clicking something locked from pressing the upgrade button itself, and from the top-up button on the out-of-credits notice. */
+export function trackUpgradeClick(action: "locked_model" | "locked_resolution" | "locked_image_size" | "upgrade_button" | "top_up_button") {
     track("canvas_upgrade_click", { action });
 }
 
